@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main>
+  <h1>Bath Monitor</h1>
+
+  <section class="occupancy {{ 'occupied' if status.occupied else 'vacant' }}">
+    {% if status.occupied %}
+      <p class="banner">Bath occupied</p>
+      <p class="since">since {{ status.occupied_since }}</p>
+    {% else %}
+      <p class="banner">Bath vacant</p>
+      {% if status.occupied_since %}
+        <p class="since">last change {{ status.occupied_since }}</p>
+      {% endif %}
+    {% endif %}
+  </section>
+
+  <ul class="people">
+    {% for person in status.people %}
+    <li class="pill {{ 'pressed' if person.pressed_today else 'not-pressed' }}">
+      <span class="name">{{ person.id }}</span>
+      <span class="state">{{ 'Pressed ✓' if person.pressed_today else 'Not yet' }}</span>
+      {% if person.last_pressed_at %}
+        <span class="time">{{ person.last_pressed_at }}</span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</main>
+{% endblock %}

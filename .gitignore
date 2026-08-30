@@ -1,0 +1,13 @@
+# Rust / firmware
+firmware/target/
+firmware/src/secrets.rs
+
+# Python / server
+server/__pycache__/
+server/**/__pycache__/
+server/.venv/
+server/data/*.db
+server/.pytest_cache/
+
+# macOS
+.DS_Store

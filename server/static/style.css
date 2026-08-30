@@ -1,0 +1,77 @@
+body {
+  font-family: system-ui, sans-serif;
+  background: #f4f4f4;
+  color: #222;
+  margin: 0;
+  padding: 2rem;
+}
+
+main {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+h1 {
+  text-align: center;
+}
+
+.occupancy {
+  text-align: center;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.occupancy.occupied {
+  background: #ffe08a;
+}
+
+.occupancy.vacant {
+  background: #d9f2d9;
+}
+
+.banner {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.since {
+  margin: 0.25rem 0 0;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.people {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pill {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #eee;
+}
+
+.pill.pressed {
+  background: #c8f0c8;
+}
+
+.pill.not-pressed {
+  background: #e0e0e0;
+}
+
+.name {
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+.time {
+  font-size: 0.75rem;
+  color: #666;
+}
