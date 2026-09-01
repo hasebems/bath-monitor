@@ -57,7 +57,7 @@ def get_led_state() -> str:
 
 
 def record_press(person: str) -> PersonStatus:
-    now = datetime.now().astimezone()
+    now = datetime.now().astimezone().replace(microsecond=0)
     now_iso = now.isoformat()
     today = now.date().isoformat()
     with _connect() as conn:
@@ -69,7 +69,7 @@ def record_press(person: str) -> PersonStatus:
 
 
 def record_occupancy(occupied: bool) -> tuple[bool, str]:
-    now_iso = datetime.now().astimezone().isoformat()
+    now_iso = datetime.now().astimezone().replace(microsecond=0).isoformat()
     with _connect() as conn:
         conn.execute(
             "INSERT INTO occupancy_log (occupied, changed_at) VALUES (?, ?)",

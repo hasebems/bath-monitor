@@ -1,4 +1,5 @@
 from dataclasses import asdict
+from datetime import datetime
 
 from flask import Flask, jsonify, render_template, request
 
@@ -6,8 +7,21 @@ import config
 import db
 
 
+def short_time(iso_str: str | None) -> str:
+    """Compact display format for a timestamp, e.g. '09/01 15:49' — the
+    raw ISO8601+offset string is too long for the mobile-width dashboard."""
+    if not iso_str:
+        return ""
+    try:
+        dt = datetime.fromisoformat(iso_str)
+    except ValueError:
+        return iso_str
+    return dt.strftime("%m/%d %H:%M")
+
+
 def create_app() -> Flask:
     app = Flask(__name__)
+    app.jinja_env.filters["short_time"] = short_time
     db.init_db()
 
     @app.post("/api/press")

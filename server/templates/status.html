@@ -7,11 +7,11 @@
   <section class="occupancy {{ 'occupied' if status.occupied else 'vacant' }}">
     {% if status.occupied %}
       <p class="banner">Bath occupied</p>
-      <p class="since">since {{ status.occupied_since }}</p>
+      <p class="since">since {{ status.occupied_since | short_time }}</p>
     {% else %}
       <p class="banner">Bath vacant</p>
       {% if status.occupied_since %}
-        <p class="since">last change {{ status.occupied_since }}</p>
+        <p class="since">last change {{ status.occupied_since | short_time }}</p>
       {% endif %}
     {% endif %}
   </section>
@@ -19,10 +19,12 @@
   <ul class="people">
     {% for person in status.people %}
     <li class="pill {{ 'pressed' if person.pressed_today else 'not-pressed' }}">
-      <span class="name">{{ person.id }}</span>
-      <span class="state">{{ 'Pressed ✓' if person.pressed_today else 'Not yet' }}</span>
+      <div class="pill-main">
+        <span class="name">{{ person.id }}</span>
+        <span class="state">{{ 'Pressed ✓' if person.pressed_today else 'Not yet' }}</span>
+      </div>
       {% if person.last_pressed_at %}
-        <span class="time">{{ person.last_pressed_at }}</span>
+        <span class="time">{{ person.last_pressed_at | short_time }}</span>
       {% endif %}
     </li>
     {% endfor %}
