@@ -32,4 +32,4 @@ Logs are over USB serial (`screen /dev/tty.usbmodemXXXX 115200`), not RTT/defmt.
 
 ## Status
 
-Server and firmware both build and pass their checks (`pytest`, `cargo build`, `cargo clippy`) in this environment, but neither has been run against real hardware (Pico W, buttons, light sensor, NeoPixels) yet — see `docs/design.md`'s verification section for what to check once wired up.
+The server has been deployed and verified on the real Raspberry Pi 4 (dashboard reachable and checked from a phone on the home LAN). The firmware builds and passes `cargo build`/`cargo clippy` but hasn't been flashed to a real Pico W yet, so the buttons/light sensor/NeoPixels are still unverified against real hardware — see `docs/design.md`'s verification section for what to check once wired up.
