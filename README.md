@@ -15,6 +15,8 @@ python app.py            # http://<this-machine>:8080
 
 Tests: `pytest tests/ -q` (from `server/`, with the venv active).
 
+For 24/7 deployment on a Raspberry Pi as a systemd service (production WSGI server via `wsgi.py`, auto-start/restart), see `docs/deploy.md`.
+
 ## Firmware
 
 Requires `rustup target add thumbv6m-none-eabi` and `cargo install elf2uf2-rs flip-link` (no `probe-rs`/debug probe needed — flashing is BOOTSEL + UF2).

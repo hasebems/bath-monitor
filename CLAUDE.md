@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A home IoT system that tracks who has taken a bath. A Raspberry Pi Pico W (RP2040) in the bathroom reads 5 buttons (one per family member, wired GND-to-pin with internal pull-ups) and 1 occupancy light sensor, drives a chain of 5 NeoPixels (one per button, lit while that person has pressed today), and sends events over Wi-Fi/HTTP to a Flask server on the home LAN, which persists state in SQLite and serves an auto-refreshing HTML dashboard. Full design rationale is in `docs/design.md`; the HTTP contract is in `docs/protocol.md`; GPIO/PIO/DMA pin assignments are in `docs/wiring.md`.
+A home IoT system that tracks who has taken a bath. A Raspberry Pi Pico W (RP2040) in the bathroom reads 5 buttons (one per family member, wired GND-to-pin with internal pull-ups) and 1 occupancy light sensor, drives a chain of 5 NeoPixels (one per button, lit while that person has pressed today), and sends events over Wi-Fi/HTTP to a Flask server on the home LAN, which persists state in SQLite and serves an auto-refreshing HTML dashboard. The server runs 24/7 on a Raspberry Pi 4 as a systemd service. Full design rationale is in `docs/design.md`; the HTTP contract is in `docs/protocol.md`; GPIO/PIO/DMA pin assignments are in `docs/wiring.md`; Pi deployment steps are in `docs/deploy.md`.
 
 Two independent projects share this repo (not a Cargo workspace):
 - `firmware/` — Rust, `no_std`, embassy-rp + cyw43, targets the Pico W (RP2040)
@@ -18,7 +18,8 @@ Two independent projects share this repo (not a Cargo workspace):
 cd server
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python app.py                      # runs on 0.0.0.0:8080
+python app.py                      # dev server (Flask/Werkzeug), runs on 0.0.0.0:8080
+python wsgi.py                     # production server (waitress) — what systemd runs on the Pi
 ```
 
 Tests (pytest, Flask test client, temp-file SQLite per test):
@@ -28,7 +29,7 @@ pytest tests/ -q                   # all tests
 pytest tests/test_api.py::test_press_is_idempotent_same_day -q   # single test
 ```
 
-No linter is configured for the server yet.
+No linter is configured for the server yet. See `docs/deploy.md` for the systemd unit (`server/deploy/bath-monitor.service`) that runs `wsgi.py` on boot with auto-restart.
 
 ### Firmware (`firmware/`)
 

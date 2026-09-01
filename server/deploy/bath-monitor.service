@@ -1,0 +1,15 @@
+[Unit]
+Description=bath-monitor server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/bath-monitor/server
+ExecStart=/home/pi/bath-monitor/server/.venv/bin/python /home/pi/bath-monitor/server/wsgi.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

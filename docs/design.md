@@ -50,7 +50,7 @@ Also verify `rand_core` version matches whatever `embassy-rp 0.10.0` actually de
 
 ## Server (`server/`, Python + Flask)
 
-**Stack:** `Flask==3.1.3` only — bundles Jinja2 + a dev server, sufficient for 4 routes and a handful of low-frequency IoT clients. Persistence via stdlib `sqlite3` (schema is 2 small tables — no ORM needed).
+**Stack:** `Flask==3.1.3` (bundles Jinja2), plus `waitress==3.0.2` as the production WSGI server — the app runs 24/7 on a Raspberry Pi 4 via systemd (see `docs/deploy.md`), so `wsgi.py`/waitress is what's actually deployed; `app.py`'s Flask dev server (`python app.py`) is kept only for local development. Persistence via stdlib `sqlite3` (schema is 2 small tables — no ORM needed).
 
 **Schema (`schema.sql`):**
 ```sql
