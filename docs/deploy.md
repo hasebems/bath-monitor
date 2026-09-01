@@ -2,6 +2,8 @@
 
 Target: Raspberry Pi OS (Debian-based, systemd), running the server continuously as a systemd service that starts on boot and restarts on crash. The server is pure Python + stdlib `sqlite3`, so no architecture-specific steps are needed.
 
+**Python version note**: the reference Pi for this project runs Raspberry Pi OS Buster with **Python 3.7.3**. `server/requirements.txt` is pinned to the last Flask/Werkzeug/waitress releases that still support Python 3.7 (Flask 2.2.5 — newer Flask requires Python 3.9+), and the code avoids Python 3.8+-only syntax (`X | Y` union types, builtin generics like `list[X]`) via `from __future__ import annotations`. If your Pi has a newer Python (Bullseye/Bookworm ship 3.9/3.11), these pins still work fine — there was no need to special-case by OS version.
+
 ## Install
 
 ```bash
