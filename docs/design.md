@@ -1,9 +1,11 @@
 # Design: bath-monitor — "who took a bath" home IoT system
 
 ## Context
-`bath-monitor` is a wall-mounted panel in the bathroom with 5 push buttons (one per family member) and 1 occupancy light sensor, wired to a Raspberry Pi Pico W. Pressing a button records "this person bathed today" (idempotent per day, resets at local midnight) — the point is simply to know who has/hasn't pressed today, not to compute "who was last." The light sensor independently reports whether the bath is currently occupied, and that in/out history is kept permanently as a log. The Pico W sends both signals to a Flask server on the home LAN over plain HTTP POST (no MQTT), and the server renders a single auto-refreshing HTML dashboard.
+`bath-monitor` is a wall-mounted panel in the bathroom with 5 push buttons (one per family member) and 1 occupancy light sensor, wired to a Raspberry Pi Pico 2 W. Pressing a button records "this person bathed today" (idempotent per day, resets at local midnight) — the point is simply to know who has/hasn't pressed today, not to compute "who was last." The light sensor independently reports whether the bath is currently occupied, and that in/out history is kept permanently as a log. The Pico 2 W sends both signals to a Flask server on the home LAN over plain HTTP POST (no MQTT), and the server renders a single auto-refreshing HTML dashboard.
 
-Dev machine (macOS) toolchain used during implementation: rustc/cargo 1.93.0, `thumbv6m-none-eabi` target installed, `elf2uf2-rs`/`flip-link`/`cargo-generate` on PATH (no `probe-rs` — flashing is via BOOTSEL + UF2 drag-and-drop, not SWD debugging). Python 3.14.6/pip 26.1.2.
+**Board history**: initial implementation (below) targeted the original Pico W (RP2040); the plan changed to Pico 2 W (RP2350) on 2026-09-03, before the firmware was ever flashed to real hardware, and the firmware code was migrated to RP2350 the same day (builds and passes clippy on `thumbv8m.main-none-eabihf`; not yet flash-tested on real hardware). Pico 2 W is pin-compatible (same GPIO numbering), so the wiring/pin plan was unaffected — see `CLAUDE.md`'s "Notes for future work" for the full migration diff (target triple, `embassy-rp` feature flag, boot image format, flashing tool, clock divider).
+
+Dev machine (macOS) toolchain used during initial (Pico W) implementation: rustc/cargo 1.93.0, `thumbv6m-none-eabi` target installed, `elf2uf2-rs`/`flip-link`/`cargo-generate` on PATH (no `probe-rs` — flashing is via BOOTSEL + UF2 drag-and-drop, not SWD debugging). Python 3.14.6/pip 26.1.2. After the RP2350/Pico 2 W migration: `thumbv8m.main-none-eabihf` target, `picotool` instead of `elf2uf2-rs` for flashing (`elf2uf2-rs` doesn't produce a working UF2 for RP235x), `flip-link` confirmed still works as the linker on this target.
 
 ## Repo layout
 Two independent projects in one repo (not a Cargo workspace — only one Rust crate exists):
@@ -46,7 +48,7 @@ Also verify `rand_core` version matches whatever `embassy-rp 0.10.0` actually de
 - `occupancy.rs` — light sensor read (digital `Input` two-state signal per requirements), confirm-stable debounce (~2000ms, to reject chatter near threshold) before pushing `OccupancyChanged`
 - `http_client.rs` — owns the single `reqwless::HttpClient`, drains the channel, POSTs `{"person":"alice"}` to `/api/press` or `{"occupied":true}` to `/api/occupancy`, logs outcome via `log::info!`/`warn!`
 
-**Build/flash:** `.cargo/config.toml` sets `target = "thumbv6m-none-eabi"`, `runner = "elf2uf2-rs -d"`, `flip-link` as linker (stack-overflow guard page — valuable with no debugger). `cargo run --release` builds → converts to UF2 → auto-copies to a BOOTSEL-mode Pico.
+**Build/flash (RP2350/Pico 2 W, as migrated):** `.cargo/config.toml` sets `target = "thumbv8m.main-none-eabihf"`, `runner = "picotool load -u -v -x -t elf"` (`elf2uf2-rs`'s UF2 output doesn't work on RP235x — confirmed via embassy-rs/embassy#4322), `flip-link` as linker (stack-overflow guard page — valuable with no debugger; confirmed it still links successfully on this target). `memory.x` uses RP2350's boot layout (`.start_block`/`.bi_entries`/`.end_block` sections instead of RP2040's BOOT2 region) — no `main.rs` changes were needed for this, since `embassy-rp`'s `rp235xa` feature emits the required `IMAGE_DEF` boot block itself. `cargo run --release` builds → flashes a BOOTSEL-mode Pico 2 W via `picotool`.
 
 ## Server (`server/`, Python + Flask)
 

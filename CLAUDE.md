@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A home IoT system that tracks who has taken a bath. A Raspberry Pi Pico W (RP2040) in the bathroom reads 5 buttons (one per family member, wired GND-to-pin with internal pull-ups) and 1 occupancy light sensor, drives a chain of 5 NeoPixels (one per button, lit while that person has pressed today), and sends events over Wi-Fi/HTTP to a Flask server on the home LAN, which persists state in SQLite and serves an auto-refreshing HTML dashboard. The server runs 24/7 on a Raspberry Pi 4 as a systemd service. Full design rationale is in `docs/design.md`; the HTTP contract is in `docs/protocol.md`; GPIO/PIO/DMA pin assignments are in `docs/wiring.md`; Pi deployment steps are in `docs/deploy.md`.
+A home IoT system that tracks who has taken a bath. A Raspberry Pi Pico 2 W (RP2350) in the bathroom reads 5 buttons (one per family member, wired GND-to-pin with internal pull-ups) and 1 occupancy light sensor, drives a chain of 5 NeoPixels (one per button, lit while that person has pressed today), and sends events over Wi-Fi/HTTP to a Flask server on the home LAN, which persists state in SQLite and serves an auto-refreshing HTML dashboard. The server runs 24/7 on a Raspberry Pi 4 as a systemd service. Full design rationale is in `docs/design.md`; the HTTP contract is in `docs/protocol.md`; GPIO/PIO/DMA pin assignments are in `docs/wiring.md`; Pi deployment steps are in `docs/deploy.md`.
 
 Two independent projects share this repo (not a Cargo workspace):
-- `firmware/` — Rust, `no_std`, embassy-rp + cyw43, targets the Pico W (RP2040)
+- `firmware/` — Rust, `no_std`, embassy-rp + cyw43, targets the Pico 2 W (RP2350)
 - `server/` — Python, Flask
 
 ## Commands
@@ -33,12 +33,12 @@ No linter is configured for the server yet. See `docs/deploy.md` for the systemd
 
 ### Firmware (`firmware/`)
 
-Requires `rustup target add thumbv6m-none-eabi` and `cargo install elf2uf2-rs flip-link` (already set up in this environment). Before building, copy `firmware/src/secrets.rs.example` to `firmware/src/secrets.rs` (gitignored) and fill in real Wi-Fi/server values.
+Requires `rustup target add thumbv8m.main-none-eabihf` (RP2350 is Arm Cortex-M33, not the RP2040's Cortex-M0+) and `picotool` on PATH for flashing (`elf2uf2-rs` does not produce a working UF2 for RP235x — see Notes for future work). Before building, copy `firmware/src/secrets.rs.example` to `firmware/src/secrets.rs` (gitignored) and fill in real Wi-Fi/server values.
 
 ```bash
 cd firmware
 cargo build --release              # compile-check without hardware
-cargo run --release                # build, convert to UF2, flash a Pico in BOOTSEL mode
+cargo run --release                # build, flash a Pico 2 W in BOOTSEL mode via picotool
 cargo clippy --release              # lint
 ```
 
@@ -58,4 +58,13 @@ Peripheral allocation is fixed and hand-wired in `main.rs` (GPIO/PIO fields can'
 
 - Crate versions in `firmware/Cargo.toml` were verified against the actual published crates.io releases (not the embassy-rs/embassy "main" branch examples, which track unreleased APIs) as of 2026-08-30 — if bumping embassy-* versions, expect API drift (this happened repeatedly during initial implementation: `Stack::new` → free function `embassy_net::new`, `DnsClient` → `DnsSocket`, `PioWs2812::write_slice` → `write`, etc.) and re-check against the actual crate source in `~/.cargo/registry/src/*/<crate>-<version>/` rather than trusting example code from the git repo.
 - `reqwless` is a plain crates.io dependency (0.14.0), not git-pinned — it targets `embedded-nal-async` trait bounds, which the published `embassy-net` satisfies directly.
+- **Pico W → Pico 2 W (RP2350) migration** (decided 2026-09-03, firmware code migrated same day — `cargo build --release`/`cargo clippy --release` both pass on `thumbv8m.main-none-eabihf`, but not yet flash-tested on real Pico 2 W hardware). The two boards are pin-compatible (same 40-pin layout, same GPIO numbering), so `docs/wiring.md`'s GPIO table and `config.rs::BUTTON_PINS`/`LIGHT_SENSOR_PIN` needed no changes. What changed:
+  - `.cargo/config.toml`: target `thumbv6m-none-eabi` → `thumbv8m.main-none-eabihf` (RP2350's Cortex-M33 core); runner `elf2uf2-rs -d` → `picotool load -u -v -x -t elf` (`elf2uf2-rs` doesn't produce a working UF2 for RP235x — confirmed via embassy-rs/embassy#4322); kept `linker = "flip-link"` — confirmed it still runs and links successfully on this target (verified via `cargo build -v`), though the resulting flipped-stack layout is not yet hardware-tested.
+  - `firmware/Cargo.toml`: `embassy-rp` feature `"rp2040"` → `"rp235xa"` (Pico 2 W uses the RP2350A/QFN-60 die, same as Pico 2 — not `"rp235xb"`, which is for the QFN-80 variant with more GPIO).
+  - `firmware/memory.x`: replaced with RP2350's layout (`FLASH`/`RAM`/`SRAM8`/`SRAM9` regions + `.start_block`/`.bi_entries`/`.end_block` SECTIONS, copied from `embassy-rs/embassy`'s `examples/rp235x/memory.x`) since RP2350 has no RP2040-style BOOT2 stage — its ROM bootloader instead requires a boot Image Definition block linked into the first 4K of flash. No code changes were needed in `main.rs` for this: embassy-rp's `rp235xa` feature emits the `IMAGE_DEF` static itself (confirmed present at `__start_block_addr` via `nm` on the built ELF). Flash sized to the real Pico 2 W's 4MB (vs Pico W's 2MB); RAM to RP2350's 520KB (vs RP2040's 264KB).
+  - `firmware/build.rs`: dropped the `-Tlink-rp.x` linker arg — that script is RP2040-specific (embassy's own `examples/rp235x/build.rs` omits it; including it would fail to find the script on RP235x).
+  - `firmware/src/net.rs`: `cyw43_pio::DEFAULT_CLOCK_DIVIDER` → `RM2_CLOCK_DIVIDER` for the `PioSpi::new` clock divider — embassy's Pico 2 W example uses this because `DEFAULT_CLOCK_DIVIDER` can leave cyw43 SPI unreliable on RP2350 (embassy-rs/embassy#3960).
+  - `firmware/cyw43-firmware/nvram_rp2040.bin`: kept unchanged/unrenamed — same CYW43439 chip as Pico W, and embassy's own rp235x/Pico 2 W example (`examples/rp235x/src/bin/blinky_wifi.rs`) loads this identical file, so it's confirmed reusable despite the RP2040-suggesting filename.
+  - PIO/DMA allocation (PIO0+DMA_CH0 for cyw43, PIO1+DMA_CH2 for the NeoPixel chain) was left as-is and still builds cleanly — RP2350 has more PIO blocks (3 vs 2) and DMA channels (16 vs 12) than RP2040, so there's no conflict, just less resource pressure than before.
+  - Not yet done: flashing and verifying against a real Pico 2 W board (buttons/light sensor/NeoPixels/Wi-Fi join all still unverified on hardware, same as before this migration).
 - The production Pi runs **Python 3.7.3** (Raspberry Pi OS Buster), so `server/requirements.txt` is pinned to old Flask/Werkzeug/waitress releases and the code avoids Python 3.8+ syntax (`X | Y` types, `list[X]`) via `from __future__ import annotations` — don't add newer type-hint syntax or bump these pins without checking 3.7 compatibility. This dev environment's Python (3.14) can't even import Werkzeug 2.2.3 (removed `ast.Str`), so verifying server changes against the Pi's actual Python version requires a matching interpreter (e.g. `brew install python@3.9` locally as a closer stand-in — 3.7 itself isn't installable via current Homebrew) rather than the default `python3`.

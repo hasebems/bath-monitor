@@ -1,5 +1,5 @@
 use cyw43::{aligned_bytes, JoinOptions};
-use cyw43_pio::{PioSpi, DEFAULT_CLOCK_DIVIDER};
+use cyw43_pio::{PioSpi, RM2_CLOCK_DIVIDER};
 use embassy_executor::Spawner;
 use embassy_net::{Config, Runner as NetRunner, Stack, StackResources};
 use embassy_rp::clocks::RoscRng;
@@ -43,6 +43,8 @@ pub async fn init(
 
     let fw = aligned_bytes!("../cyw43-firmware/43439A0.bin");
     let clm = aligned_bytes!("../cyw43-firmware/43439A0_clm.bin");
+    // Same CYW43439 chip/nvram blob as the Pico W despite the filename;
+    // embassy's own rp235x Pico 2 W example loads this identical file.
     let nvram = aligned_bytes!("../cyw43-firmware/nvram_rp2040.bin");
 
     let pwr = Output::new(pwr, Level::Low);
@@ -51,7 +53,9 @@ pub async fn init(
     let spi = PioSpi::new(
         &mut pio.common,
         pio.sm0,
-        DEFAULT_CLOCK_DIVIDER,
+        // Pico 2 W needs a divider larger than DEFAULT_CLOCK_DIVIDER or cyw43
+        // SPI communication is unreliable (embassy-rs/embassy#3960).
+        RM2_CLOCK_DIVIDER,
         pio.irq0,
         cs,
         dio,

@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 embassy-executor = { version = "0.10.0" }
 embassy-time = { version = "0.5.1" }
-embassy-rp = { version = "0.10.0", features = ["unstable-pac", "time-driver", "critical-section-impl", "rp2040", "executor-thread", "executor-interrupt"] }
+embassy-rp = { version = "0.10.0", features = ["unstable-pac", "time-driver", "critical-section-impl", "rp235xa", "executor-thread", "executor-interrupt"] }
 embassy-net = { version = "0.9.1", features = ["tcp", "dns", "dhcpv4"] }
 embassy-sync = { version = "0.8.0" }
 embassy-usb-logger = { version = "0.6.0" }
