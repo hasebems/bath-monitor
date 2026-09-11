@@ -1,10 +1,10 @@
 # bath-monitor
 
-Who took a bath today? A Raspberry Pi Pico 2 W in the bathroom reads 5 buttons (one per family member) and a light/occupancy sensor, lights a NeoPixel per button once that person has pressed today, and reports both signals over Wi-Fi to a Flask server on the home LAN, which shows a live dashboard.
+今日誰がお風呂に入ったか?を記録する仕組み。浴室に設置したRaspberry Pi Pico 2 Wが5個のボタン(家族一人につき1個)と人感(照度)センサーを読み取り、ボタンが押されるたびにNeoPixelを点灯させ、MAX98357Aアンプ経由でビープ音を鳴らします。両方の信号はWi-Fi経由で自宅LAN上のFlaskサーバーに送られ、サーバーはライブダッシュボードを表示します。
 
-See `docs/design.md` for the full design, `docs/protocol.md` for the HTTP contract, and `docs/wiring.md` for pin assignments.
+設計の詳細は`docs/design.md`、HTTPの契約(プロトコル)は`docs/protocol.md`、ピン割り当ては`docs/wiring.md`を参照してください。
 
-## Server
+## サーバー
 
 ```bash
 cd server
@@ -13,23 +13,23 @@ pip install -r requirements.txt
 python app.py            # http://<this-machine>:8080
 ```
 
-Tests: `pytest tests/ -q` (from `server/`, with the venv active).
+テスト: `pytest tests/ -q`(`server/`ディレクトリで、venvを有効化した状態で実行)。
 
-For 24/7 deployment on a Raspberry Pi as a systemd service (production WSGI server via `wsgi.py`, auto-start/restart), see `docs/deploy.md`.
+Raspberry Pi上でsystemdサービスとして24時間365日稼働させる方法(`wsgi.py`経由の本番用WSGIサーバー、自動起動・自動再起動)は`docs/deploy.md`を参照してください。
 
-## Firmware
+## ファームウェア
 
-Requires `rustup target add thumbv8m.main-none-eabihf` (RP2350 is Arm Cortex-M33) and `picotool` on PATH for flashing (no `probe-rs`/debug probe needed — flashing is BOOTSEL + `picotool`; `elf2uf2-rs` does not work for RP2350/RP235x).
+`rustup target add thumbv8m.main-none-eabihf`(RP2350はArm Cortex-M33のため)と、書き込み用に`picotool`をPATHに通しておく必要があります(デバッグプローブ不要 — 書き込みはBOOTSEL + `picotool`で行います。`elf2uf2-rs`はRP2350/RP235xでは動作しません)。
 
 ```bash
-cp firmware/src/secrets.rs.example firmware/src/secrets.rs   # fill in real Wi-Fi + server values
+cp firmware/src/secrets.rs.example firmware/src/secrets.rs   # 実際のWi-Fi/サーバー情報を記入
 cd firmware
-cargo build --release     # compile-check
-cargo run --release       # build, flash a Pico 2 W in BOOTSEL mode via picotool
+cargo build --release     # コンパイルチェックのみ
+cargo run --release       # ビルドし、BOOTSELモードのPico 2 Wにpicotool経由で書き込み
 ```
 
-Logs are over USB serial (`screen /dev/tty.usbmodemXXXX 115200`), not RTT/defmt.
+ログはUSBシリアル経由(`screen /dev/tty.usbmodemXXXX 115200`)で確認します(RTT/defmtではありません)。
 
-## Status
+## 現在の状況
 
-The server has been deployed and verified on the real Raspberry Pi 4 (dashboard reachable and checked from a phone on the home LAN). The target board changed from Pico W to Pico 2 W (RP2350) before the firmware was ever flashed to real hardware; the firmware has since been migrated to RP2350 (builds and passes `cargo clippy` on `thumbv8m.main-none-eabihf`) but hasn't been flashed to a real Pico 2 W yet, so the buttons/light sensor/NeoPixels/Wi-Fi join are still unverified against real hardware — see `docs/design.md`'s verification section for what to check once wired up.
+サーバーは実機のRaspberry Pi 4上にデプロイ・動作確認済みです(ダッシュボードに自宅LAN上のスマートフォンからアクセスできることを確認済み)。対象基板はファームウェアを実機に書き込む前にPico WからPico 2 W(RP2350)に変更となり、ファームウェアのコードは同日中にRP2350向けに移行済みです(`thumbv8m.main-none-eabihf`向けに`cargo clippy`まで通過)が、実機のPico 2 Wへはまだ書き込んでいないため、ボタン/照度センサー/NeoPixel/MAX98357Aアンプ/Wi-Fi接続は実機での動作確認がまだできていません — 配線後に確認すべき内容は`docs/design.md`の検証手順の節を参照してください。

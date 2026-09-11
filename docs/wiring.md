@@ -1,12 +1,12 @@
-# Wiring
+# 配線
 
-One PCB mounted in/near the bathroom, wired to a single Raspberry Pi Pico 2 W. Pin numbers below are GPIO numbers and must match `firmware/src/config.rs`. Pico 2 W is pin-compatible with the original Pico W (same 40-pin layout and GPIO numbering), so these assignments carry over unchanged from the original Pico W plan.
+浴室内またはその付近に設置する1枚の基板を、1台のRaspberry Pi Pico 2 Wに配線します。以下のピン番号はGPIO番号であり、`firmware/src/config.rs`と一致している必要があります。Pico 2 Wは元のPico Wとピン互換(同じ40ピン配置・同じGPIO番号)なので、これらの割り当ては元のPico Wの計画からそのまま引き継がれています。
 
-## Buttons (5x, one per family member)
+## ボタン(5個、家族一人につき1個)
 
-Each button: one leg to the GPIO pin (configured as input with internal pull-up), the other leg to GND. A press pulls the pin low. Order in `PEOPLE`/`BUTTON_PINS` must match `server/config.py`'s `PEOPLE` list.
+各ボタン: 片方の端子をGPIOピン(内部プルアップ付きの入力として設定)に、もう片方をGNDに接続します。押すとピンがLowになります。`PEOPLE`/`BUTTON_PINS`の順序は`server/config.py`の`PEOPLE`リストと一致させる必要があります。
 
-| Person index | GPIO |
+| 人物インデックス | GPIO |
 |---|---|
 | 0 | 2 |
 | 1 | 3 |
@@ -14,30 +14,45 @@ Each button: one leg to the GPIO pin (configured as input with internal pull-up)
 | 3 | 5 |
 | 4 | 6 |
 
-Adjust to actual wiring before flashing.
+書き込み前に実際の配線に合わせて調整してください。
 
-## Light / occupancy sensor (1x)
+## 照度/在室センサー(1個)
 
-Assumed to present a clean two-state digital signal (e.g. via a comparator/threshold circuit on the sensor board) on GPIO 26, read as a plain digital input. If the sensor instead outputs an analog level, `firmware/src/occupancy.rs` will need to switch to `embassy_rp::adc::Adc` with a threshold constant instead of a digital `Input` — update this doc and `config.rs`'s `LIGHT_SENSOR_PIN` comment accordingly if that's the case.
+GPIO26上で、(センサー基板上のコンパレータ/しきい値回路などにより)クリーンな2値のデジタル信号が得られることを前提とし、単純なデジタル入力として読み取ります。センサーがアナログレベルを出力する場合は、`firmware/src/occupancy.rs`をデジタル`Input`ではなく、しきい値定数付きの`embassy_rp::adc::Adc`に切り替える必要があります — その場合は本ドキュメントと`config.rs`の`LIGHT_SENSOR_PIN`のコメントも合わせて更新してください。
 
-Suggested part: a CdS photoresistor (LDR) + LM393 comparator "light detection module" (common, cheap, sold for Arduino) — it has an onboard trim-pot threshold and outputs HIGH/LOW directly, matching the digital-input assumption above with no firmware changes. Not yet ordered/confirmed against real bathroom light levels — verify the trim-pot threshold once installed.
+推奨部品: CdS光導電セル(LDR) + LM393コンパレータの「光検出モジュール」(Arduino向けによく売られている安価で一般的なもの) — オンボードのトリムポットでしきい値を調整でき、上記のデジタル入力の前提通りHIGH/LOWを直接出力するため、ファームウェアの変更は不要です。まだ発注・実際の浴室の明るさでの確認はしていません — 設置後にトリムポットのしきい値を確認してください。
 
-| Signal | GPIO |
+| 信号 | GPIO |
 |---|---|
-| Occupancy sensor | 26 |
+| 在室センサー | 26 |
 
-## NeoPixel (WS2812) press indicators (5x, daisy-chained)
+## NeoPixel(WS2812)押下インジケーター(5個、デイジーチェーン接続)
 
-One NeoPixel per button, wired in a single chain (`DIN` of LED 0 → GPIO data pin; `DOUT` of LED N → `DIN` of LED N+1), same order as `BUTTON_PINS`/`PEOPLE`. Driven via PIO1 (PIO0 is used by the cyw43 Wi-Fi SPI link) + DMA_CH2 (DMA_CH0/CH1 are used by cyw43). RP2350 has more PIO blocks (3) and DMA channels (16) than RP2040 (2 and 12), so this allocation remains valid on the Pico 2 W with headroom to spare. Lit (green) when that person has pressed today; reconciled periodically from the server's `/api/led-state` (see `firmware/src/status_poll.rs`, `firmware/src/led.rs`).
+ボタン1個につきNeoPixel1個を、1本のチェーンとして配線します(LED 0の`DIN` → GPIOデータピン、LED NのDOUT → LED N+1のDIN)。順序は`BUTTON_PINS`/`PEOPLE`と同じです。PIO1(PIO0はcyw43 Wi-FiのSPIリンクで使用中)+ DMA_CH2(DMA_CH0/CH1はcyw43が使用中)で駆動します。RP2350はRP2040(PIO2個、DMA12チャンネル)よりPIOブロック数(3個)とDMAチャンネル数(16個)が多いため、この割り当てはPico 2 W上でも余裕を持って有効です。その人物が今日ボタンを押していれば点灯(緑色)し、サーバーの`/api/led-state`から定期的に状態が再調整されます(`firmware/src/status_poll.rs`、`firmware/src/led.rs`を参照)。
 
-| Signal | GPIO |
+| 信号 | GPIO |
 |---|---|
-| NeoPixel data (chain of 5) | 15 |
+| NeoPixelデータ(5個のチェーン) | 15 |
 
-## PIO / DMA allocation summary
+## MAX98357A I2Sオーディオアンプ(ボタン押下時のビープ音)
 
-| Resource | Used by |
+いずれかのボタンが押されるたびに、既存のLEDによるフィードバックに加えて、固定のビープ音(`firmware/src/audio.rs`で合成)を鳴らします。PIO2 + DMA_CH3で駆動します(下記のcyw43/NeoPixelの割り当てとは重複しません) — RP2350の3つ目のPIOブロックと余ったDMAチャンネルにより、競合なくこの機能を追加できます。
+
+`SD`(シャットダウン)ピンと`GAIN`(ゲイン設定)ピンは別ピンです。`SD`は3V3に直結してください: 多くのMAX98357Aブレイクアウト基板(Adafruit製など)ではこのピンにオンボードのプルダウンが付いており、フローティングのままだとデフォルトでシャットダウン状態になるため、アンプを有効化するには3V3への配線が必須です(GPIOで制御する必要はなく、常時イネーブルで問題ありません)。`GAIN`はフローティング(未接続)のままにしておけばデフォルトのゲイン(9dB)になり、追加の部品は不要です。より大きい/小さい音量にしたい場合は、モジュールのデータシート記載の抵抗分圧(GNDへ直結、VDDへ抵抗経由など)に従って`GAIN`を配線してください。`VIN`は(3V3ではなく)5Vに接続します(モジュール自身がクラスD出力段まで内部でレギュレートするため)、これにより十分な音量の余裕が得られます。
+
+| 信号 | GPIO |
 |---|---|
-| PIO0, DMA_CH0 | cyw43 Wi-Fi SPI (`net.rs`) |
-| PIO1, DMA_CH2 | WS2812 NeoPixel chain (`led.rs`) |
-| USB | `embassy-usb-logger` (serial log output) |
+| BCLK(ビットクロック) | 16 |
+| LRC(ワード/左右クロック) | 17 |
+| DIN(オーディオデータ) | 18 |
+
+実機の発注・配線はまだ行っていません — 接続後にアンプの音量・クリッピングの有無を確認してください(`audio.rs`のトーン振幅は控えめなデフォルト値になっています。詳細はコード中のコメントを参照)。
+
+## PIO / DMA割り当て一覧
+
+| リソース | 使用箇所 |
+|---|---|
+| PIO0, DMA_CH0 | cyw43 Wi-Fi SPI(`net.rs`) |
+| PIO1, DMA_CH2 | WS2812 NeoPixelチェーン(`led.rs`) |
+| PIO2, DMA_CH3 | MAX98357A I2Sオーディオ出力(`audio.rs`) |
+| USB | `embassy-usb-logger`(シリアルログ出力) |

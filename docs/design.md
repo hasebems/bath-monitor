@@ -1,34 +1,34 @@
-# Design: bath-monitor — "who took a bath" home IoT system
+# 設計: bath-monitor — 「誰がお風呂に入ったか」を記録する家庭用IoTシステム
 
-## Context
-`bath-monitor` is a wall-mounted panel in the bathroom with 5 push buttons (one per family member) and 1 occupancy light sensor, wired to a Raspberry Pi Pico 2 W. Pressing a button records "this person bathed today" (idempotent per day, resets at local midnight) — the point is simply to know who has/hasn't pressed today, not to compute "who was last." The light sensor independently reports whether the bath is currently occupied, and that in/out history is kept permanently as a log. The Pico 2 W sends both signals to a Flask server on the home LAN over plain HTTP POST (no MQTT), and the server renders a single auto-refreshing HTML dashboard.
+## 背景・目的
+`bath-monitor`は、浴室の壁に取り付けるパネルで、5個の押しボタン(家族一人につき1個)と1個の在室用照度センサーを備え、Raspberry Pi Pico 2 Wに配線されています。ボタンを押すと「この人物は今日入浴した」という記録が残ります(1日単位で冪等、ローカル時刻の深夜0時にリセット) — 目的はあくまで今日誰が押した/押していないかを把握することであり、「最後に入ったのは誰か」を計算することではありません。照度センサーは独立して浴室が現在使用中かどうかを報告し、その入退室の履歴は恒久的にログとして保持されます。Pico 2 Wはどちらの信号も、MQTTではなく単純なHTTP POSTで自宅LAN上のFlaskサーバーに送信し、サーバーは自動更新される単一のHTMLダッシュボードを描画します。
 
-**Board history**: initial implementation (below) targeted the original Pico W (RP2040); the plan changed to Pico 2 W (RP2350) on 2026-09-03, before the firmware was ever flashed to real hardware, and the firmware code was migrated to RP2350 the same day (builds and passes clippy on `thumbv8m.main-none-eabihf`; not yet flash-tested on real hardware). Pico 2 W is pin-compatible (same GPIO numbering), so the wiring/pin plan was unaffected — see `CLAUDE.md`'s "Notes for future work" for the full migration diff (target triple, `embassy-rp` feature flag, boot image format, flashing tool, clock divider).
+**基板の変更履歴**: 当初の実装(以下参照)は元のPico W(RP2040)を対象としていましたが、ファームウェアを実機に一度も書き込む前の2026-09-03に、対象基板をPico 2 W(RP2350)へ変更する方針となり、同日中にファームウェアのコードもRP2350向けに移行しました(`thumbv8m.main-none-eabihf`向けにビルドとclippyの両方を通過済み、実機での書き込み確認はまだ未実施)。Pico 2 Wはピン互換(GPIO番号が同じ)のため、配線・ピンの計画には影響がありませんでした — マイグレーションの詳細な差分(ターゲットのtriple、`embassy-rp`のfeatureフラグ、ブートイメージ形式、書き込みツール、クロック分周比)については`CLAUDE.md`の「Notes for future work」を参照してください。
 
-Dev machine (macOS) toolchain used during initial (Pico W) implementation: rustc/cargo 1.93.0, `thumbv6m-none-eabi` target installed, `elf2uf2-rs`/`flip-link`/`cargo-generate` on PATH (no `probe-rs` — flashing is via BOOTSEL + UF2 drag-and-drop, not SWD debugging). Python 3.14.6/pip 26.1.2. After the RP2350/Pico 2 W migration: `thumbv8m.main-none-eabihf` target, `picotool` instead of `elf2uf2-rs` for flashing (`elf2uf2-rs` doesn't produce a working UF2 for RP235x), `flip-link` confirmed still works as the linker on this target.
+初期(Pico W)実装時に開発機(macOS)で使用したツールチェーン: rustc/cargo 1.93.0、`thumbv6m-none-eabi`ターゲットをインストール済み、`elf2uf2-rs`/`flip-link`/`cargo-generate`をPATHに追加(`probe-rs`は未使用 — 書き込みはSWDデバッグではなくBOOTSEL + UF2のドラッグ&ドロップで行う)。Python 3.14.6/pip 26.1.2。RP2350/Pico 2 Wへの移行後: `thumbv8m.main-none-eabihf`ターゲット、書き込みには`elf2uf2-rs`の代わりに`picotool`を使用(`elf2uf2-rs`はRP235x向けの動作するUF2を生成できないため)、リンカとしての`flip-link`はこのターゲットでも引き続き動作することを確認済み。
 
-## Repo layout
-Two independent projects in one repo (not a Cargo workspace — only one Rust crate exists):
+## リポジトリ構成
+1つのリポジトリに2つの独立したプロジェクトが存在します(Cargoワークスペースではなく、Rustのクレートは1つだけ):
 ```
 bath-monitor/
 ├── CLAUDE.md, README.md, .gitignore
-├── docs/design.md           # this file
-├── docs/protocol.md         # canonical HTTP API contract (source of truth for both sides)
-├── docs/wiring.md           # GPIO pin assignments
-├── firmware/                 # Rust, embassy-rp, standalone crate
-└── server/                   # Python, Flask
+├── docs/design.md           # このファイル
+├── docs/protocol.md         # 正式なHTTP APIの契約(両側の信頼できる情報源)
+├── docs/wiring.md           # GPIOピンの割り当て
+├── firmware/                 # Rust、embassy-rp、独立したクレート
+└── server/                   # Python、Flask
 ```
 
-## Firmware (`firmware/`, Rust + embassy-rp + cyw43)
+## ファームウェア(`firmware/`、Rust + embassy-rp + cyw43)
 
-**Key decisions:**
-- Logging: `embassy-usb-logger` (USB-CDC) + `log`, not `defmt`/RTT — no debug probe available, but USB serial works over the same cable used to flash.
-- Panic handler: `panic-halt` (RTT-based `panic-probe` is useless without a probe).
-- Config: `src/secrets.rs` (gitignored, real Wi-Fi/server values) + `src/secrets.rs.example` (checked in template) + `src/config.rs` (non-secret: person list, GPIO pins, debounce timings).
-- HTTP payloads: tiny hand-built JSON via `heapless::String` + `core::write!` (no `serde` — bodies are 1-2 fields).
-- Coordination: one `embassy_sync::channel::Channel<AppEvent, 8>` — button/occupancy tasks only ever push events; a single `sender_task` owns the `reqwless::HttpClient` and drains the channel serially (no locking needed, naturally rate-limits POSTs).
+**主な設計判断:**
+- ロギング: `defmt`/RTTではなく`embassy-usb-logger`(USB-CDC)+ `log` — デバッグプローブが手元にないため。ただし書き込みに使うのと同じケーブル経由でUSBシリアルが使える。
+- パニックハンドラ: `panic-halt`(RTTベースの`panic-probe`はプローブなしでは意味がないため)。
+- 設定: `src/secrets.rs`(gitignore対象、実際のWi-Fi/サーバー情報)+ `src/secrets.rs.example`(コミットされているテンプレート)+ `src/config.rs`(非秘匿情報: 人物リスト、GPIOピン、デバウンス時間など)。
+- HTTPペイロード: `heapless::String` + `core::write!`による手作りの小さなJSON(`serde`は使わない — ボディはせいぜい1〜2フィールドのため)。
+- タスク間の連携: `embassy_sync::channel::Channel<AppEvent, 8>`を1つ用意 — ボタン/在室タスクはイベントをプッシュするだけで、単一の`sender_task`が`reqwless::HttpClient`を所有し、チャンネルを直列に処理する(ロック不要で、自然にPOSTがレート制限される)。
 
-**Dependency versions** (verified against crates.io as of 2026-08-30 — double-check the `embassy-net` stack construction API and `cyw43` firmware-blob loading against the live `embassy-rs/embassy` `examples/rp/src/bin/wifi_*.rs` at these exact pinned versions before relying on `net.rs`, since these APIs have changed shape across versions):
+**依存クレートのバージョン**(2026-08-30時点でcrates.ioの実際のリリースに対して検証済み — `net.rs`に依存する前に、これらの正確な固定バージョンで、`embassy-net`のスタック構築APIと`cyw43`のファームウェアBLOB読み込みを、実際に稼働している`embassy-rs/embassy`の`examples/rp/src/bin/wifi_*.rs`と突き合わせて再確認すること。これらのAPIはバージョンによって形が変わっているため):
 ```
 embassy-executor 0.10.0, embassy-time 0.5.1, embassy-rp 0.10.0,
 embassy-net 0.9.1 (tcp, dns, dhcpv4), embassy-sync 0.8.0, embassy-usb-logger 0.6.0,
@@ -37,75 +37,75 @@ reqwless 0.14.0, embedded-io-async 0.7.0,
 cortex-m 0.7.9, cortex-m-rt 0.7.6, panic-halt 1.0.0,
 static_cell 2.1.1, heapless 0.9.3, log 0.4.34
 ```
-Also verify `rand_core` version matches whatever `embassy-rp 0.10.0` actually depends on.
+`rand_core`のバージョンが、実際に`embassy-rp 0.10.0`が依存しているものと一致しているかも確認すること。
 
-**Modules:**
-- `main.rs` — executor setup, hardware init, spawns all tasks
-- `secrets.rs` / `secrets.rs.example` / `config.rs` — as above
-- `events.rs` — `AppEvent { ButtonPressed{person_idx}, OccupancyChanged{occupied} }` + the shared `Channel`
-- `net.rs` — cyw43/embassy-net bring-up, Wi-Fi join with exponential-backoff retry (transient AP issues must self-recover — no probe to debug a stuck board)
-- `buttons.rs` — 5 async tasks using `Input::wait_for_rising_edge()`, 50ms debounce per pin, push `ButtonPressed`
-- `occupancy.rs` — light sensor read (digital `Input` two-state signal per requirements), confirm-stable debounce (~2000ms, to reject chatter near threshold) before pushing `OccupancyChanged`
-- `http_client.rs` — owns the single `reqwless::HttpClient`, drains the channel, POSTs `{"person":"alice"}` to `/api/press` or `{"occupied":true}` to `/api/occupancy`, logs outcome via `log::info!`/`warn!`
+**モジュール構成:**
+- `main.rs` — エグゼキュータのセットアップ、ハードウェア初期化、全タスクのスポーン
+- `secrets.rs` / `secrets.rs.example` / `config.rs` — 上記の通り
+- `events.rs` — `AppEvent { ButtonPressed{person_idx}, OccupancyChanged{occupied} }`と、共有の`Channel`
+- `net.rs` — cyw43/embassy-netの初期化、指数バックオフ付きリトライによるWi-Fi接続(一時的なAPの不調から自力で復旧できる必要がある — 動かなくなった基板をデバッグするプローブがないため)
+- `buttons.rs` — `Input::wait_for_rising_edge()`を使った5個の非同期タスク、ピンごとに50msのデバウンス、`ButtonPressed`をプッシュ
+- `occupancy.rs` — 照度センサーの読み取り(要件通りデジタル`Input`による2値信号)、しきい値付近のチャタリングを排除するための確定待ちデバウンス(約2000ms)を経てから`OccupancyChanged`をプッシュ
+- `http_client.rs` — 単一の`reqwless::HttpClient`を所有し、チャンネルを処理して`/api/press`に`{"person":"alice"}`を、`/api/occupancy`に`{"occupied":true}`をPOSTし、`log::info!`/`warn!`で結果をログ出力
 
-**Build/flash (RP2350/Pico 2 W, as migrated):** `.cargo/config.toml` sets `target = "thumbv8m.main-none-eabihf"`, `runner = "picotool load -u -v -x -t elf"` (`elf2uf2-rs`'s UF2 output doesn't work on RP235x — confirmed via embassy-rs/embassy#4322), `flip-link` as linker (stack-overflow guard page — valuable with no debugger; confirmed it still links successfully on this target). `memory.x` uses RP2350's boot layout (`.start_block`/`.bi_entries`/`.end_block` sections instead of RP2040's BOOT2 region) — no `main.rs` changes were needed for this, since `embassy-rp`'s `rp235xa` feature emits the required `IMAGE_DEF` boot block itself. `cargo run --release` builds → flashes a BOOTSEL-mode Pico 2 W via `picotool`.
+**ビルド/書き込み(移行後のRP2350/Pico 2 W):** `.cargo/config.toml`で`target = "thumbv8m.main-none-eabihf"`、`runner = "picotool load -u -v -x -t elf"`を設定(`elf2uf2-rs`のUF2出力はRP235xでは動作しないことをembassy-rs/embassy#4322で確認済み)。リンカには`flip-link`を使用(スタックオーバーフローのガードページ — デバッガがない環境では有用。このターゲットでも問題なくリンクできることを確認済み)。`memory.x`はRP2350のブートレイアウト(RP2040のBOOT2領域の代わりに`.start_block`/`.bi_entries`/`.end_block`セクション)を使用しています — `embassy-rp`の`rp235xa`featureが必要な`IMAGE_DEF`ブートブロックを自動的に生成してくれるため、`main.rs`側の変更は不要でした。`cargo run --release`でビルド → BOOTSELモードのPico 2 Wに`picotool`経由で書き込みます。
 
-## Server (`server/`, Python + Flask)
+## サーバー(`server/`、Python + Flask)
 
-**Stack:** `Flask==3.1.3` (bundles Jinja2), plus `waitress==3.0.2` as the production WSGI server — the app runs 24/7 on a Raspberry Pi 4 via systemd (see `docs/deploy.md`), so `wsgi.py`/waitress is what's actually deployed; `app.py`'s Flask dev server (`python app.py`) is kept only for local development. Persistence via stdlib `sqlite3` (schema is 2 small tables — no ORM needed).
+**構成:** `Flask==3.1.3`(Jinja2を同梱)に加え、本番用WSGIサーバーとして`waitress==3.0.2`を使用 — このアプリはRaspberry Pi 4上でsystemd経由で24時間365日稼働するため(`docs/deploy.md`参照)、実際にデプロイされるのは`wsgi.py`/waitressの組み合わせです。`app.py`のFlask開発用サーバー(`python app.py`)はローカル開発用としてのみ残しています。永続化は標準ライブラリの`sqlite3`を使用(スキーマは小さなテーブル2つのみで、ORMは不要)。
 
-**Schema (`schema.sql`):**
+**スキーマ(`schema.sql`):**
 ```sql
 CREATE TABLE press_status (
     person TEXT PRIMARY KEY,
-    last_pressed_at TEXT,        -- ISO8601, NULL if never pressed
-    last_pressed_date TEXT       -- 'YYYY-MM-DD', drives the reset logic
+    last_pressed_at TEXT,        -- ISO8601、一度も押されていなければNULL
+    last_pressed_date TEXT       -- 'YYYY-MM-DD'形式、リセット処理の判定に使用
 );
 CREATE TABLE occupancy_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     occupied INTEGER NOT NULL CHECK (occupied IN (0,1)),
-    changed_at TEXT NOT NULL     -- ISO8601, append-only, never pruned
+    changed_at TEXT NOT NULL     -- ISO8601、追記専用で、削除されることはない
 );
 ```
-`press_status` seeded (`INSERT OR IGNORE`) from `config.PEOPLE` at startup — adding a family member is a config change + restart. Current occupancy = the most recent `occupancy_log` row (no separate "current state" table, avoids drift).
+`press_status`は起動時に`config.PEOPLE`から(`INSERT OR IGNORE`で)初期投入されます — 家族の追加は設定変更+再起動で対応します。現在の在室状態は、専用の「現在の状態」テーブルを持たず、`occupancy_log`の最新行そのものとします(こうすることで状態のズレを防いでいます)。
 
-**Daily reset (no scheduler):** every read/write compares `last_pressed_date` to `date.today()` (server's local time, stdlib `datetime`, no `pytz`/`zoneinfo` needed since server runs on the home LAN, not UTC cloud infra). `pressed_today = (last_pressed_date == today)`. Press writes are unconditional upserts — same-day re-press is a harmless idempotent overwrite.
+**日次リセット(スケジューラなし):** 読み書きのたびに`last_pressed_date`を`date.today()`(サーバーのローカル時刻。UTCのクラウドインフラではなく自宅LAN上で動いているため、標準ライブラリの`datetime`のみで`pytz`/`zoneinfo`は不要)と比較します。`pressed_today = (last_pressed_date == today)`。押下時の書き込みは無条件のupsertであり、同日中の再押下は害のない冪等な上書きになります。
 
-**Routes (`app.py`, app-factory pattern):**
-| Method | Path | Purpose |
+**ルーティング(`app.py`、アプリファクトリパターン):**
+| メソッド | パス | 用途 |
 |---|---|---|
-| POST | `/api/press` | `{"person": "<id>"}` → validate against `config.PEOPLE` (400 if unknown), upsert `press_status` |
-| POST | `/api/occupancy` | `{"occupied": true\|false}` → append to `occupancy_log` (no server-side dedup — trusts firmware debounce) |
-| GET | `/api/status` | JSON snapshot: per-person `pressed_today`/`last_pressed_at` + current `occupied`/`occupied_since` |
-| GET | `/` | Renders `templates/status.html` using the same `db.get_status()` data as `/api/status` |
+| POST | `/api/press` | `{"person": "<id>"}` → `config.PEOPLE`に対して検証(未知なら400)、`press_status`をupsert |
+| POST | `/api/occupancy` | `{"occupied": true\|false}` → `occupancy_log`に追記(サーバー側での重複排除はせず、ファームウェア側のデバウンスを信頼する) |
+| GET | `/api/status` | JSONスナップショット: 人物ごとの`pressed_today`/`last_pressed_at`、現在の`occupied`/`occupied_since` |
+| GET | `/` | `/api/status`と同じ`db.get_status()`のデータを使って`templates/status.html`を描画 |
 
-`db.py` exposes `init_db()`, `get_status()`, `record_press()`, `record_occupancy()` — routes stay thin (parse → call → return/render).
+`db.py`は`init_db()`、`get_status()`、`record_press()`、`record_occupancy()`を公開しており、ルート側は薄いまま(パース → 呼び出し → 返却/描画)にしています。
 
-**Page:** `templates/base.html` + `status.html`, `<meta http-equiv="refresh" content="5">` (no JS/websockets needed for a home LAN dashboard) — 5 people as colored pills (pressed/not), one occupancy banner (occupied/vacant + since-time). `static/style.css` for minimal styling.
+**ページ:** `templates/base.html` + `status.html`、`<meta http-equiv="refresh" content="5">`(自宅LAN向けのダッシュボードなのでJS/WebSocketは不要) — 5人分を色付きのピル(押した/押していない)で表示し、在室状態のバナーを1つ表示(在室中/不在 + 開始時刻)。`static/style.css`で最小限のスタイリングを行います。
 
-## Files created
+## 作成されたファイル
 ```
 firmware/Cargo.toml, Cargo.lock, .cargo/config.toml, memory.x, build.rs
 firmware/src/{main,secrets.rs.example,config,events,net,buttons,occupancy,http_client}.rs
 server/{requirements.txt,config.py,schema.sql,db.py,models.py,app.py}
 server/templates/{base,status}.html, server/static/style.css
 server/tests/{conftest.py,test_api.py}
-server/data/.gitkeep   (bath_monitor.db is gitignored runtime state)
+server/data/.gitkeep   (bath_monitor.dbは実行時状態のためgitignore対象)
 docs/design.md, docs/protocol.md, docs/wiring.md
 README.md, .gitignore  (target/, secrets.rs, __pycache__/, .venv/, *.db, .DS_Store)
 ```
 
-## Verification
-**Server (no hardware needed):**
+## 検証手順
+**サーバー(ハードウェア不要):**
 ```bash
 cd server && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
 python app.py
-# in another terminal:
+# 別のターミナルで:
 curl -X POST localhost:8080/api/press -H 'Content-Type: application/json' -d '{"person":"alice"}'
 curl -X POST localhost:8080/api/occupancy -H 'Content-Type: application/json' -d '{"occupied":true}'
 curl localhost:8080/api/status
 open localhost:8080/
 ```
-Also verify: unknown person → 400, malformed body → 400, reset logic by manually backdating `last_pressed_date` in the sqlite file and confirming `/api/status` flips to `false`. Run `pytest server/tests/`.
+併せて確認すること: 未知の人物 → 400、不正なリクエストボディ → 400、sqliteファイル内の`last_pressed_date`を手動で過去日付にしてリセット処理を確認し、`/api/status`が`false`に切り替わることを確認する。`pytest server/tests/`を実行する。
 
-**Firmware (once flashed):** `cargo run --release` with Pico in BOOTSEL mode → open USB-serial terminal (`screen /dev/tty.usbmodemXXXX 115200`) → confirm Wi-Fi join + IP log, then confirm a physical button press produces a server-side `POST /api/press 200` (visible in Flask's request log) and the dashboard pill flips green within one refresh cycle. Cover/uncover the light sensor and confirm exactly one debounced `occupancy_log` row per real transition, not a chattering flood.
+**ファームウェア(書き込み後):** PicoをBOOTSELモードにして`cargo run --release` → USBシリアル端末を開く(`screen /dev/tty.usbmodemXXXX 115200`) → Wi-Fi接続とIPのログを確認し、その後、物理的なボタン押下によってサーバー側で`POST /api/press 200`が発生すること(Flaskのリクエストログで確認可能)、ダッシュボードのピルが1回の更新サイクル以内に緑色に切り替わること、そしてMAX98357Aアンプがビープ音(`audio.rs`)を、耳で聞いて分かるようなクリッピング/歪みなしに再生することを確認する — クリッピングする場合は`audio.rs`のウェーブテーブルの振幅を調整すること。照度センサーを覆う/覆いを外すを行い、実際の状態遷移1回につき、チャタリングによる大量発生ではなく、デバウンス済みの`occupancy_log`の行がちょうど1行だけ記録されることを確認する。

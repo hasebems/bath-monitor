@@ -1,54 +1,54 @@
-# HTTP protocol
+# HTTPプロトコル
 
-Canonical contract between `firmware/` (client) and `server/` (Flask app). Both sides must match this — the firmware's `PEOPLE`/`config.rs` person ids must match `server/config.py`'s `PEOPLE` list exactly.
+`firmware/`(クライアント)と`server/`(Flaskアプリ)間の正式な契約(コントラクト)。両者はこの内容に一致させる必要があります — ファームウェア側の`PEOPLE`/`config.rs`の人物IDは、`server/config.py`の`PEOPLE`リストと完全に一致していなければなりません。
 
-Base URL: `http://<server-host>:8080` (configured in firmware `secrets.rs` as `SERVER_BASE_URL`, and in `server/config.py` as `HOST`/`PORT`).
+ベースURL: `http://<server-host>:8080`(ファームウェア側は`secrets.rs`の`SERVER_BASE_URL`、サーバー側は`server/config.py`の`HOST`/`PORT`で設定)。
 
 ## `POST /api/press`
 
-Sent once per debounced button press.
+デバウンス処理済みのボタン押下1回につき1回送信されます。
 
-Request body:
+リクエストボディ:
 ```json
 { "person": "alice" }
 ```
 
-Response `200 OK`:
+レスポンス `200 OK`:
 ```json
 { "status": "ok", "person": "alice", "date": "2026-08-30" }
 ```
 
-Response `400 Bad Request` (unknown or missing `person`):
+レスポンス `400 Bad Request`(`person`が未知または欠落している場合):
 ```json
 { "status": "error", "message": "unknown person" }
 ```
 
 ## `POST /api/occupancy`
 
-Sent once per confirmed (debounced) occupancy transition.
+確定した(デバウンス済みの)在室状態の変化1回につき1回送信されます。
 
-Request body:
+リクエストボディ:
 ```json
 { "occupied": true }
 ```
 
-Response `200 OK`:
+レスポンス `200 OK`:
 ```json
 { "status": "ok", "occupied": true, "timestamp": "2026-08-30T21:14:03+09:00" }
 ```
 
-Response `400 Bad Request` (missing/non-boolean `occupied`):
+レスポンス `400 Bad Request`(`occupied`が欠落または真偽値でない場合):
 ```json
 { "status": "error", "message": "occupied must be a boolean" }
 ```
 
-The server does not deduplicate consecutive same-state occupancy POSTs — the firmware is responsible for debouncing before sending.
+サーバー側では同じ状態が連続して送られてきても重複排除は行いません — 送信前にデバウンスする責任はファームウェア側にあります。
 
 ## `GET /api/status`
 
-JSON snapshot used by the dashboard page and available for `curl`/testing.
+ダッシュボードページで使われるJSONスナップショットで、`curl`や動作確認にも利用できます。
 
-Response `200 OK`:
+レスポンス `200 OK`:
 ```json
 {
   "people": [
@@ -62,15 +62,15 @@ Response `200 OK`:
 
 ## `GET /api/led-state`
 
-Compact, embedded-friendly status used by the firmware's periodic NeoPixel sync (avoids JSON parsing on-device). One character per person, in `PEOPLE` order, `1` if `pressed_today` else `0`. `Content-Type: text/plain`.
+ファームウェアが定期的に行うNeoPixel同期処理で使われる、組み込み機器向けのコンパクトな状態表現(デバイス上でのJSONパースを避けるため)。`PEOPLE`の順序で1人につき1文字、`pressed_today`なら`1`、そうでなければ`0`。`Content-Type: text/plain`。
 
-Response `200 OK` body (for 5 people, e.g. alice and carol pressed today):
+レスポンス `200 OK`のボディ(5人のうちaliceとcarolが今日押した場合の例):
 ```
 10100
 ```
 
-The firmware polls this on an interval (see `firmware/src/status_poll.rs`) and reconciles all 5 NeoPixels to match — this is what turns the LEDs off again after the server's daily reset, and what restores correct LED state after a firmware reboot.
+ファームウェアはこれを一定間隔でポーリングし(`firmware/src/status_poll.rs`を参照)、5個すべてのNeoPixelをこの状態に合わせて再調整します — これにより、サーバー側の日次リセット後にLEDが再び消灯し、またファームウェア再起動後も正しいLED状態が復元されます。
 
 ## `GET /`
 
-Renders the HTML dashboard using the same data as `/api/status`.
+`/api/status`と同じデータを使ってHTMLダッシュボードを描画します。
