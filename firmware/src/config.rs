@@ -21,6 +21,23 @@ pub const LIGHT_SENSOR_PIN: u8 = 26;
 /// in the same order as `PEOPLE`/`BUTTON_PINS`.
 pub const NEOPIXEL_PIN: u8 = 15;
 
+#[allow(dead_code)]
+/// GPIO for the MAX98357A I2S amp's BCLK (bit clock) input.
+pub const AUDIO_BCLK_PIN: u8 = 16;
+#[allow(dead_code)]
+/// GPIO for the MAX98357A I2S amp's LRC (word/left-right clock) input.
+pub const AUDIO_LRCLK_PIN: u8 = 17;
+#[allow(dead_code)]
+/// GPIO for the MAX98357A I2S amp's DIN (audio data) input.
+pub const AUDIO_DIN_PIN: u8 = 18;
+
+/// Sample rate used for the button-press beep, and for the I2S bit-clock
+/// timing derived from it in `audio.rs`.
+pub const AUDIO_SAMPLE_RATE_HZ: u32 = 48_000;
+/// Bit depth per I2S channel; must match what `audio.rs`'s PIO program is
+/// configured for (`PioI2sOutProgram`/`PioI2sOut` take this as a parameter).
+pub const AUDIO_BIT_DEPTH: u32 = 16;
+
 pub const BUTTON_DEBOUNCE_MS: u64 = 50;
 pub const OCCUPANCY_DEBOUNCE_MS: u64 = 2000;
 

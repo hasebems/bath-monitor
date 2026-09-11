@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 
+mod audio;
 mod buttons;
 mod config;
 mod debounce;
@@ -26,7 +27,10 @@ async fn logger_task(driver: Driver<'static, USB>) {
     embassy_usb_logger::run!(1024, log::LevelFilter::Info, driver);
 }
 
-#[embassy_executor::main(executor = "embassy_rp::executor::Executor", entry = "cortex_m_rt::entry")]
+#[embassy_executor::main(
+    executor = "embassy_rp::executor::Executor",
+    entry = "cortex_m_rt::entry"
+)]
 async fn main(spawner: Spawner) {
     let p = embassy_rp::init(Default::default());
 
@@ -35,11 +39,15 @@ async fn main(spawner: Spawner) {
     Timer::after(Duration::from_secs(1)).await;
     log::info!("bath-monitor firmware starting");
 
-    let stack = net::init(spawner, p.PIN_23, p.PIN_25, p.PIO0, p.PIN_24, p.PIN_29, p.DMA_CH0).await;
+    let stack = net::init(
+        spawner, p.PIN_23, p.PIN_25, p.PIO0, p.PIN_24, p.PIN_29, p.DMA_CH0,
+    )
+    .await;
 
     spawner.spawn(http_client::sender_task(stack).unwrap());
     spawner.spawn(status_poll::status_poll_task(stack).unwrap());
     spawner.spawn(led::led_task(p.PIO1, p.DMA_CH2, p.PIN_15).unwrap());
+    spawner.spawn(audio::audio_task(p.PIO2, p.DMA_CH3, p.PIN_16, p.PIN_17, p.PIN_18).unwrap());
     spawner.spawn(occupancy::occupancy_task(p.PIN_26.into()).unwrap());
 
     // Hardcoded pin-to-person mapping — must stay in sync with

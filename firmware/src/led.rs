@@ -21,8 +21,14 @@ const OFF: RGB8 = RGB8::new(0, 0, 0);
 /// `pin` must be `config::NEOPIXEL_PIN` (PIO requires a concrete pin type,
 /// so this can't be type-erased/data-driven like the button pins).
 #[embassy_executor::task]
-pub async fn led_task(pio1: Peri<'static, PIO1>, dma_ch2: Peri<'static, DMA_CH2>, pin: Peri<'static, PIN_15>) {
-    let Pio { mut common, sm0, .. } = Pio::new(pio1, Irqs);
+pub async fn led_task(
+    pio1: Peri<'static, PIO1>,
+    dma_ch2: Peri<'static, DMA_CH2>,
+    pin: Peri<'static, PIN_15>,
+) {
+    let Pio {
+        mut common, sm0, ..
+    } = Pio::new(pio1, Irqs);
     let program = PioWs2812Program::new(&mut common);
     let mut ws2812 = PioWs2812::new(&mut common, sm0, dma_ch2, Irqs, pin, &program);
 
