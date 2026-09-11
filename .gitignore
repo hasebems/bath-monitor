@@ -9,5 +9,8 @@ server/.venv/
 server/data/*.db
 server/.pytest_cache/
 
+# Schematics
+schematic/bath-monitor-backups
+
 # macOS
 .DS_Store
