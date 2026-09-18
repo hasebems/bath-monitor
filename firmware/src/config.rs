@@ -31,12 +31,17 @@ pub const AUDIO_LRCLK_PIN: u8 = 17;
 /// GPIO for the MAX98357A I2S amp's DIN (audio data) input.
 pub const AUDIO_DIN_PIN: u8 = 18;
 
-/// Sample rate used for the button-press beep, and for the I2S bit-clock
-/// timing derived from it in `audio.rs`.
+/// Sample rate used for the I2S bit-clock timing derived from it in
+/// `audio.rs`.
 pub const AUDIO_SAMPLE_RATE_HZ: u32 = 48_000;
 /// Bit depth per I2S channel; must match what `audio.rs`'s PIO program is
 /// configured for (`PioI2sOutProgram`/`PioI2sOut` take this as a parameter).
 pub const AUDIO_BIT_DEPTH: u32 = 16;
+
+/// Number of samples in `audio.rs`'s shared `WAVEFORM_BUFFER`, one DMA
+/// transfer's worth. CORE1 continuously streams this buffer's current
+/// contents out over I2S in a loop, independent of whatever writes into it.
+pub const AUDIO_BUFFER_SAMPLES: usize = 256;
 
 pub const BUTTON_DEBOUNCE_MS: u64 = 50;
 pub const OCCUPANCY_DEBOUNCE_MS: u64 = 2000;

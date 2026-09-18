@@ -47,7 +47,7 @@ async fn main(spawner: Spawner) {
     spawner.spawn(http_client::sender_task(stack).unwrap());
     spawner.spawn(status_poll::status_poll_task(stack).unwrap());
     spawner.spawn(led::led_task(p.PIO1, p.DMA_CH2, p.PIN_15).unwrap());
-    spawner.spawn(audio::audio_task(p.PIO2, p.DMA_CH3, p.PIN_16, p.PIN_17, p.PIN_18).unwrap());
+    audio::start(p.CORE1, p.PIO2, p.DMA_CH3, p.PIN_16, p.PIN_17, p.PIN_18);
     spawner.spawn(occupancy::occupancy_task(p.PIN_26.into()).unwrap());
 
     // Hardcoded pin-to-person mapping — must stay in sync with

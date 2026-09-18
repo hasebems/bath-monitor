@@ -18,11 +18,5 @@ pub enum LedEvent {
     Sync { pressed: [bool; NUM_PEOPLE] },
 }
 
-/// Events that trigger the MAX98357A button-press beep (`audio.rs`).
-pub enum AudioEvent {
-    Play,
-}
-
 pub static EVENT_CHANNEL: Channel<CriticalSectionRawMutex, AppEvent, 8> = Channel::new();
 pub static LED_CHANNEL: Channel<CriticalSectionRawMutex, LedEvent, 8> = Channel::new();
-pub static AUDIO_CHANNEL: Channel<CriticalSectionRawMutex, AudioEvent, 8> = Channel::new();
