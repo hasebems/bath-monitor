@@ -9,10 +9,12 @@ mod events;
 mod http_client;
 mod irqs;
 mod led;
+mod music;
 mod net;
 mod occupancy;
 mod secrets;
 mod status_poll;
+mod waveform;
 
 use embassy_executor::Spawner;
 use embassy_rp::peripherals::USB;

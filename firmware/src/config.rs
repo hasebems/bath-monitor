@@ -48,6 +48,25 @@ pub const AUDIO_BIT_DEPTH: u32 = 16;
 /// contents out over I2S in a loop, independent of whatever writes into it.
 pub const AUDIO_BUFFER_SAMPLES: usize = 256;
 
+/// Length of `waveform.rs`'s single-cycle sine wavetable. Exactly 100
+/// because `AUDIO_SAMPLE_RATE_HZ` was chosen as 440Hz x 100, so MIDI note 69
+/// (A4 = 440Hz exactly) reads this table one sample per output sample with
+/// zero pitch error (see `docs/additional_spec.md`).
+pub const AUDIO_WAVETABLE_SAMPLES: usize = 100;
+
+/// The unit `music.rs`'s `NoteEvent::time`/`duration` are counted in.
+pub const AUDIO_TIME_UNIT_MS: u64 = 10;
+
+/// Per-sample envelope rate constants and silence threshold for
+/// `waveform.rs`'s slots (`amplitude += (target - amplitude) * rate`,
+/// applied once per sample at `AUDIO_SAMPLE_RATE_HZ`). These are
+/// placeholder values, not yet tuned by ear on real hardware — see the
+/// "未決定事項" list in `docs/additional_spec.md`.
+pub const AUDIO_ATTACK_RATE: f32 = 0.01;
+pub const AUDIO_RELEASE_RATE: f32 = 0.002;
+pub const AUDIO_DAMP_RATE: f32 = 0.05;
+pub const AUDIO_MINIMUM_LEVEL: f32 = 0.001;
+
 pub const BUTTON_DEBOUNCE_MS: u64 = 50;
 pub const OCCUPANCY_DEBOUNCE_MS: u64 = 2000;
 

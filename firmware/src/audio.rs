@@ -4,10 +4,9 @@
 //!
 //! `WAVEFORM_BUFFER` is a fixed-size sample buffer shared across cores:
 //! `core1_task` continuously copies its current contents out and DMAs them
-//! over I2S in a loop, forever, regardless of what's in it. Something else
-//! (not yet implemented) is expected to write new sample data into
-//! `WAVEFORM_BUFFER` over time; until that exists, the buffer stays at its
-//! initial value and CORE1 streams silence.
+//! over I2S in a loop, forever, regardless of what's in it. `waveform.rs`'s
+//! `waveform_task` (also spawned on CORE1, see `start`) is what writes new
+//! sample data into `WAVEFORM_BUFFER`, paced by `BUFFER_CONSUMED` below.
 
 use core::cell::RefCell;
 
@@ -19,11 +18,13 @@ use embassy_rp::pio_programs::i2s::{PioI2sOut, PioI2sOutProgram};
 use embassy_rp::Peri;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::blocking_mutex::Mutex;
+use embassy_sync::signal::Signal;
 use static_cell::StaticCell;
 
 use crate::config::{AUDIO_BIT_DEPTH, AUDIO_BUFFER_SAMPLES, AUDIO_SAMPLE_RATE_HZ};
-use crate::events::MELODY_CHANNEL;
 use crate::irqs::Irqs;
+use crate::music::music_task;
+use crate::waveform::waveform_task;
 
 /// Shared I2S output buffer. Each `u32` DMA word packs one sample into both
 /// the left and right channel slots (see `PioI2sOut`/`PioI2sOutProgram`).
@@ -33,6 +34,13 @@ use crate::irqs::Irqs;
 /// the only thing that makes that safe across cores.
 pub static WAVEFORM_BUFFER: Mutex<CriticalSectionRawMutex, RefCell<[u32; AUDIO_BUFFER_SAMPLES]>> =
     Mutex::new(RefCell::new([0; AUDIO_BUFFER_SAMPLES]));
+
+/// Signaled by `core1_task` each time it finishes DMAing a chunk out over
+/// I2S. `waveform.rs`'s `waveform_task` waits on this before synthesizing
+/// the next chunk, so it stays paced 1:1 with actual playback instead of
+/// racing ahead (which would silently drop a chunk that's never played) or
+/// falling behind (which would repeat one) — see `docs/additional_spec.md`.
+pub static BUFFER_CONSUMED: Signal<CriticalSectionRawMutex, ()> = Signal::new();
 
 /// CORE1's stack, sized generously since the whole embassy executor for
 /// that core (task + PIO/DMA driver state) runs on it.
@@ -55,34 +63,19 @@ pub fn start(
         executor.run(|spawner| {
             spawner
                 .spawn(core1_task(pio2, dma_ch3, bclk, lrclk, din).unwrap());
-            spawner.spawn(melody_task().unwrap());
+            spawner.spawn(waveform_task().unwrap());
+            spawner.spawn(music_task().unwrap());
         });
     });
-}
-
-/// Drains `MELODY_CHANNEL` on CORE1. The music-data playback and waveform
-/// output modules from `docs/additional_spec.md` aren't implemented yet, so
-/// this only logs each trigger for now — but it must exist and keep
-/// draining the channel regardless, since `MELODY_CHANNEL` is a bounded
-/// `Channel` and `buttons.rs` sends into it with a blocking `.await`: with
-/// no consumer, it would fill up after 8 unconsumed presses and permanently
-/// hang that person's button task.
-#[embassy_executor::task]
-async fn melody_task() {
-    loop {
-        let person_idx = MELODY_CHANNEL.receive().await;
-        log::info!(
-            "melody trigger for person {} (playback not yet implemented)",
-            person_idx
-        );
-    }
 }
 
 /// Runs on CORE1: owns the I2S link (PIO2 + DMA_CH3) and continuously DMAs
 /// `WAVEFORM_BUFFER`'s current contents out over I2S, looping forever. Each
 /// iteration copies the shared buffer into a local, unshared array first so
-/// a future writer can update `WAVEFORM_BUFFER` at any time without racing
-/// the DMA transfer already in flight.
+/// `waveform_task` can update `WAVEFORM_BUFFER` at any time without racing
+/// the DMA transfer already in flight, then signals `BUFFER_CONSUMED` right
+/// after the transfer completes so `waveform_task` knows it's time to
+/// synthesize the next chunk.
 #[embassy_executor::task]
 async fn core1_task(
     pio2: Peri<'static, PIO2>,
@@ -113,5 +106,6 @@ async fn core1_task(
     loop {
         WAVEFORM_BUFFER.lock(|buf| out_buf.copy_from_slice(&buf.borrow()[..]));
         i2s.write(&out_buf).await;
+        BUFFER_CONSUMED.signal(());
     }
 }
