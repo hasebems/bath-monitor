@@ -22,7 +22,51 @@
 
 ## オーディオ: `WAVEFORM_BUFFER`への波形書き込み
 
-**状態:** 未定
+**状態:** 検討中
 
 **仕様:**
-`firmware/src/audio.rs`はCORE1上でI2S出力(PIO2 + DMA_CH3、MAX98357A宛)を常時行っており、256サンプルの共有バッファ`WAVEFORM_BUFFER`の内容を無限ループで読み出してDMA出力し続けている。このバッファへ実際の波形サンプルを書き込む仕様は、まだ提示されていない。
+
+- 波形出力モジュールとして、波形出力用の slot を２個作成する
+    - slot は、波形データの先頭から、位相情報に合わせてデータを読み込む
+    - slot は、note on message を受信し、これをトリガにして波形を出力する
+    - note on message には、pitch, volume, duration の３つのデータがある
+        - pitch は、波形を読み込むための1サンプルあたりの位相情報を変更する(69で波形データを一つずつ読む位相となる)。MIDI Note Number 69(=A4=440Hz)を基準に、位相増分 = 2^((pitch - 69) / 12) として計算する
+        - volume は、音量で 1-127 の範囲、振幅は (volume/127)^2 とする
+        - duration は、音を消し始めるタイミングを制御する
+    - slot に note on message が来たら、振幅ゼロから attack rate に従って、少しずつ振幅を上げていく
+    - slot が鳴り始めて duration だけ経過したら最大振幅から release rate に従って、少しずつ振幅を下げていく
+    - 振幅がある一定値以下(minimum level)になったら、振幅はゼロにする
+    - 一つの slot が発音中に新しい note on message が来た時、現在の音を damp rate で急速に消音し、振幅が minimum level 以下になったら、attack rate に従って note on message を開始する
+        - damp 中は前の音の pitch で、attack が始まったら新しい pitch で発音する
+        - damp rate 中にさらに新しい note on message が来たら、次になる音を新しい note on message に差し替える
+    - WAVEFORM_BUFFER のDMA転送が終わったことを確認できたら、AUDIO_BUFFER_SAMPLES 分の二つの slot のバッファの値を足して、その値を WAVEFORM_BUFFER に書き込む
+        - 「DMA転送が終わったこと」の確認には Signal を使う。既存の DMA 転送ループ(`i2s.write().await` が返った直後)が Signal を発行し、波形出力モジュールはこれを待ってから次のチャンクを合成・書き込みする。Signal は最新の1回分の通知のみを保持するため、波形出力モジュールが多少速くても遅くても、実際の再生ペースと1:1でずれずに同期できる
+    - バッファの値を足した結果がオーバーフローした場合、最大値に張り付く
+- 音楽データ再生モジュールを作成する
+    - 音楽データは、note on message の集まりであり、time, pitch, volume, duration の４つのデータを複数個持ったものである
+        - time: 0 から始まり、再生開始からの時間を表す(1=10msec)
+        - pitch: 0-127 の MIDI の Note Number
+        - volume: 1-127
+        - duration: この note on message が開始してから消音するまでの時間を、time と同じ単位で記述する
+    - 読み出したデータは、note on message として二つの slot に交互に送られる
+    - 音楽データは全部で５つある
+    - このモジュールは、event によって再生開始し、event は 0-4 の値を持っており、その値で音楽データを指定する
+    - ボタンを押すと、押したボタン(person_idx、0-4)に対応する音楽データが発音する。つまりボタンごとに別々のメロディが鳴る
+    - モジュールが再生中に新しい event が来たら、引数に合った新しい音楽データを再生開始する
+        - slot に対して消音するなど、特別な処理は特に行わない
+- 波形出力モジュールと音楽データ再生モジュールは、同じ core 内で、別タスクとして実装する
+- core0 から core1 に、音楽データ再生モジュールを駆動する event を送る仕組みを作成する(Channelを使用)
+    - 実装済み: `events.rs::MELODY_CHANNEL`(`Channel<CriticalSectionRawMutex, usize, 8>`)を新設し、`buttons.rs`のボタン押下処理から person_idx を送信する。CORE1側では`audio.rs`に受信専用の`melody_task`を置き、チャネルを詰まらせない(現状は受信した値をログ出力するだけで、実際の再生は音楽データ再生モジュール本体の実装待ち)
+- 用意するデータ
+    - slot 用の波形データ（一波分、サイン波、100サンプル)
+    - 5つの音楽データ
+- サンプリング周波数(`AUDIO_SAMPLE_RATE_HZ`)は 44,000Hz とする(一般的なオーディオ規格に合わせる必要がないため、440Hz(MIDI Note 69 = A4)の整数倍を採用)。これにより pitch=69 の波形テーブルがピッチ誤差ゼロで100サンプルぴったりになり、波形データの作成や、将来別の楽器/音色への転用がしやすくなる
+- attack/release/damp の動作は、時間に対して一定割合で目標に近づく漸近的カーブとする
+    - この「一定割合」は1サンプルごとに適用する(チャンク単位ではない)。RP2350のCPU性能に対して1サンプルごとの演算負荷は十分小さく(1サンプルあたり数千サイクルの余裕がある)、チャンク単位更新による振幅の階段状変化(zipper noise)を避けられるため
+
+
+**未決定事項:**
+- attack rate
+- release rate
+- damp rate
+- minimum level

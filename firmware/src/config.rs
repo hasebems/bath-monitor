@@ -32,8 +32,13 @@ pub const AUDIO_LRCLK_PIN: u8 = 17;
 pub const AUDIO_DIN_PIN: u8 = 18;
 
 /// Sample rate used for the I2S bit-clock timing derived from it in
-/// `audio.rs`.
-pub const AUDIO_SAMPLE_RATE_HZ: u32 = 48_000;
+/// `audio.rs`. Not a standard consumer audio rate on purpose — this is a
+/// closed point-to-point I2S link (PIO to the MAX98357A) with no external
+/// interop requirement, so it's chosen as 440 Hz x 100 instead: at MIDI
+/// note 69 (A4 = 440 Hz exactly), the single-cycle waveform table used by
+/// the additional-spec synth (`docs/additional_spec.md`) comes out to
+/// exactly 100 samples with zero pitch error.
+pub const AUDIO_SAMPLE_RATE_HZ: u32 = 44_000;
 /// Bit depth per I2S channel; must match what `audio.rs`'s PIO program is
 /// configured for (`PioI2sOutProgram`/`PioI2sOut` take this as a parameter).
 pub const AUDIO_BIT_DEPTH: u32 = 16;

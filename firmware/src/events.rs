@@ -20,3 +20,10 @@ pub enum LedEvent {
 
 pub static EVENT_CHANNEL: Channel<CriticalSectionRawMutex, AppEvent, 8> = Channel::new();
 pub static LED_CHANNEL: Channel<CriticalSectionRawMutex, LedEvent, 8> = Channel::new();
+
+/// Which melody to (re)start playing: an index into the 5 fixed music-data
+/// tables, one per `config::PEOPLE` entry (see `docs/additional_spec.md`).
+/// Sent from CORE0's button tasks to CORE1's music-data playback task —
+/// unlike `EVENT_CHANNEL`/`LED_CHANNEL` above, which both stay on CORE0,
+/// this is the one channel here that crosses cores.
+pub static MELODY_CHANNEL: Channel<CriticalSectionRawMutex, usize, 8> = Channel::new();

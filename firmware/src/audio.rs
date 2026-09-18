@@ -22,6 +22,7 @@ use embassy_sync::blocking_mutex::Mutex;
 use static_cell::StaticCell;
 
 use crate::config::{AUDIO_BIT_DEPTH, AUDIO_BUFFER_SAMPLES, AUDIO_SAMPLE_RATE_HZ};
+use crate::events::MELODY_CHANNEL;
 use crate::irqs::Irqs;
 
 /// Shared I2S output buffer. Each `u32` DMA word packs one sample into both
@@ -53,9 +54,28 @@ pub fn start(
         let executor = CORE1_EXECUTOR.init(Executor::new());
         executor.run(|spawner| {
             spawner
-                .spawn(core1_task(pio2, dma_ch3, bclk, lrclk, din).unwrap())
+                .spawn(core1_task(pio2, dma_ch3, bclk, lrclk, din).unwrap());
+            spawner.spawn(melody_task().unwrap());
         });
     });
+}
+
+/// Drains `MELODY_CHANNEL` on CORE1. The music-data playback and waveform
+/// output modules from `docs/additional_spec.md` aren't implemented yet, so
+/// this only logs each trigger for now — but it must exist and keep
+/// draining the channel regardless, since `MELODY_CHANNEL` is a bounded
+/// `Channel` and `buttons.rs` sends into it with a blocking `.await`: with
+/// no consumer, it would fill up after 8 unconsumed presses and permanently
+/// hang that person's button task.
+#[embassy_executor::task]
+async fn melody_task() {
+    loop {
+        let person_idx = MELODY_CHANNEL.receive().await;
+        log::info!(
+            "melody trigger for person {} (playback not yet implemented)",
+            person_idx
+        );
+    }
 }
 
 /// Runs on CORE1: owns the I2S link (PIO2 + DMA_CH3) and continuously DMAs

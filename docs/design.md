@@ -44,15 +44,15 @@ static_cell 2.1.1, heapless 0.9.3, log 0.4.34
 - `main.rs` — エグゼキュータのセットアップ、ハードウェア初期化、全タスクのスポーン
 - `secrets.rs` / `secrets.rs.example` / `config.rs` — 上記の通り
 - `irqs.rs` — `bind_interrupts!`で`PIO0_IRQ_0`/`PIO1_IRQ_0`/`PIO2_IRQ_0`/`DMA_IRQ_0`/`USBCTRL_IRQ`のハンドラを一箇所にまとめて定義(embassy-rpでは全DMAチャンネルが`DMA_IRQ_0`に固定で、チャンネルごとのIRQ選択はできない)
-- `events.rs` — `AppEvent { ButtonPressed{person_idx}, OccupancyChanged{occupied} }`(サーバーへのPOST用)と`LedEvent { Pressed{person_idx}, Sync{pressed} }`(NeoPixel反映用)、およびそれぞれの共有`Channel`(`EVENT_CHANNEL`/`LED_CHANNEL`)
+- `events.rs` — `AppEvent { ButtonPressed{person_idx}, OccupancyChanged{occupied} }`(サーバーへのPOST用)と`LedEvent { Pressed{person_idx}, Sync{pressed} }`(NeoPixel反映用)、およびそれぞれの共有`Channel`(`EVENT_CHANNEL`/`LED_CHANNEL`、いずれもCORE0内で完結)。加えて`MELODY_CHANNEL`(`Channel<CriticalSectionRawMutex, usize, 8>`)— CORE0のボタンタスクからCORE1の`audio.rs`へ、押されたボタンのperson_idxを渡す、ここで唯一コアをまたぐチャンネル
 - `debounce.rs` — `buttons.rs`/`occupancy.rs`で共有する`Debouncer`: `wait_for_any_edge()`で変化を検知し、指定時間後もレベルが変わったままなら確定とみなす(チャタリングは静かに無視する)
 - `net.rs` — cyw43/embassy-netの初期化、指数バックオフ付きリトライによるWi-Fi接続(一時的なAPの不調から自力で復旧できる必要がある — 動かなくなった基板をデバッグするプローブがないため)
-- `buttons.rs` — `Debouncer`を使った5個の非同期タスク(pool_size=5)、ピンごとに50msでデバウンスし、押下確定で`AppEvent::ButtonPressed`(サーバー送信用)と`LedEvent::Pressed`(即時LED点灯用)を両方プッシュ
+- `buttons.rs` — `Debouncer`を使った5個の非同期タスク(pool_size=5)、ピンごとに50msでデバウンスし、押下確定で`AppEvent::ButtonPressed`(サーバー送信用)、`LedEvent::Pressed`(即時LED点灯用)、`MELODY_CHANNEL`へのperson_idx送信(そのボタンに対応するメロディの再生トリガ、`docs/additional_spec.md`参照)の3つをプッシュ
 - `occupancy.rs` — 照度センサーの読み取り(要件通りデジタル`Input`による2値信号)、`Debouncer`でしきい値付近のチャタリングを排除(約2000ms)してから`AppEvent::OccupancyChanged`をプッシュ
 - `http_client.rs` — 単一の`reqwless::HttpClient`を所有し、`EVENT_CHANNEL`を処理して`/api/press`に`{"person":"alice"}`を、`/api/occupancy`に`{"occupied":true}`をPOSTし、`log::info!`/`warn!`で結果をログ出力
 - `led.rs` — WS2812 NeoPixelチェーン(PIO1 + DMA_CH2、GPIO15、`config::PEOPLE`と同順)を所有。`LED_CHANNEL`を処理し、`Pressed`で即時点灯、`Sync`(`status_poll.rs`から)で全灯を一括反映 — サーバーの日次リセット後にLEDを消す役目もこれが担う
 - `status_poll.rs` — `GET /api/led-state`を`config::LED_SYNC_INTERVAL_SECS`ごとにポーリングし、結果を`LedEvent::Sync`として`LED_CHANNEL`にプッシュ。これがサーバー側の日次リセットや、ファームウェア再起動後の状態復元を反映させる仕組み
-- `audio.rs` — CORE1専属でMAX98357A向けI2S出力(PIO2 + DMA_CH3、GPIO16=BCLK/GPIO17=LRC/GPIO18=DIN、`embassy_rp::pio_programs::i2s`)を行う。`embassy_rp::multicore::spawn_core1`でCORE1を起動し、そこに載せた専用エグゼキュータ上のタスクが256サンプルの共有バッファ`WAVEFORM_BUFFER`(`CriticalSectionRawMutex`でコア間排他)の中身を無限ループで読み出し、`i2s.write().await`し続ける。バッファへ波形サンプルを書き込む処理は未実装で、現状は常に無音を出力する
+- `audio.rs` — CORE1専属でMAX98357A向けI2S出力(PIO2 + DMA_CH3、GPIO16=BCLK/GPIO17=LRC/GPIO18=DIN、`embassy_rp::pio_programs::i2s`)を行う。`embassy_rp::multicore::spawn_core1`でCORE1を起動し、そこに載せた専用エグゼキュータ上のタスクが256サンプルの共有バッファ`WAVEFORM_BUFFER`(`CriticalSectionRawMutex`でコア間排他)の中身を無限ループで読み出し、`i2s.write().await`し続ける。バッファへ波形サンプルを書き込む処理は未実装で、現状は常に無音を出力する。同じCORE1エグゼキュータ上にもう1つ`melody_task`をスポーンしており、`events.rs::MELODY_CHANNEL`を受信専用で処理する。ボタン押下(`buttons.rs`)からのperson_idxはここまで届くが、実際にメロディを合成・再生する処理(`docs/additional_spec.md`の波形出力/音楽データ再生モジュール)は未実装のため、現状は受信した値を`log::info!`するだけで消費している(チャンネルを詰まらせずボタン側の`.await`が塞がれないようにするための最小限の受け皿)
 
 **ビルド/書き込み(移行後のRP2350/Pico 2 W):** `.cargo/config.toml`で`target = "thumbv8m.main-none-eabihf"`、`runner = "picotool load -u -v -x -t elf"`を設定(`elf2uf2-rs`のUF2出力はRP235xでは動作しないことをembassy-rs/embassy#4322で確認済み)。リンカには`flip-link`を使用(スタックオーバーフローのガードページ — デバッガがない環境では有用。このターゲットでも問題なくリンクできることを確認済み)。`memory.x`はRP2350のブートレイアウト(RP2040のBOOT2領域の代わりに`.start_block`/`.bi_entries`/`.end_block`セクション)を使用しています — `embassy-rp`の`rp235xa`featureが必要な`IMAGE_DEF`ブートブロックを自動的に生成してくれるため、`main.rs`側の変更は不要でした。`cargo run --release`でビルド → BOOTSELモードのPico 2 Wに`picotool`経由で書き込みます。
 
