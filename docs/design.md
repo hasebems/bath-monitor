@@ -27,6 +27,7 @@ bath-monitor/
 - 設定: `src/secrets.rs`(gitignore対象、実際のWi-Fi/サーバー情報)+ `src/secrets.rs.example`(コミットされているテンプレート)+ `src/config.rs`(非秘匿情報: 人物リスト、GPIOピン、デバウンス時間など)。
 - HTTPペイロード: `heapless::String` + `core::write!`による手作りの小さなJSON(`serde`は使わない — ボディはせいぜい1〜2フィールドのため)。
 - タスク間の連携: `embassy_sync::channel::Channel<AppEvent, 8>`を1つ用意 — ボタン/在室タスクはイベントをプッシュするだけで、単一の`sender_task`が`reqwless::HttpClient`を所有し、チャンネルを直列に処理する(ロック不要で、自然にPOSTがレート制限される)。
+- オーディオ出力: RP2350の2コア目(CORE1)専属で実行(`audio.rs`、`embassy_rp::multicore::spawn_core1`で起動)— PIO2 + DMA_CH3経由のI2S(`embassy_rp::pio_programs::i2s`、GPIO16=BCLK/GPIO17=LRC/GPIO18=DIN、MAX98357Aアンプ宛)によるリアルタイムDMA供給ループを、CORE0側のネットワーク/LED/ボタン処理の遅延から切り離すため。256サンプルの共有バッファ`WAVEFORM_BUFFER`(`CriticalSectionRawMutex` — embassy-rpのSIOハードウェアスピンロック実装によりコア間で安全)の内容を、CORE1が無限ループで読み出しては`i2s.write().await`し続ける設計。バッファへ実際の波形サンプルを書き込む処理はまだ実装しておらず、現状は常に無音(ゼロ)を出力する。
 
 **依存クレートのバージョン**(2026-08-30時点でcrates.ioの実際のリリースに対して検証済み — `net.rs`に依存する前に、これらの正確な固定バージョンで、`embassy-net`のスタック構築APIと`cyw43`のファームウェアBLOB読み込みを、実際に稼働している`embassy-rs/embassy`の`examples/rp/src/bin/wifi_*.rs`と突き合わせて再確認すること。これらのAPIはバージョンによって形が変わっているため):
 ```
@@ -42,11 +43,16 @@ static_cell 2.1.1, heapless 0.9.3, log 0.4.34
 **モジュール構成:**
 - `main.rs` — エグゼキュータのセットアップ、ハードウェア初期化、全タスクのスポーン
 - `secrets.rs` / `secrets.rs.example` / `config.rs` — 上記の通り
-- `events.rs` — `AppEvent { ButtonPressed{person_idx}, OccupancyChanged{occupied} }`と、共有の`Channel`
+- `irqs.rs` — `bind_interrupts!`で`PIO0_IRQ_0`/`PIO1_IRQ_0`/`PIO2_IRQ_0`/`DMA_IRQ_0`/`USBCTRL_IRQ`のハンドラを一箇所にまとめて定義(embassy-rpでは全DMAチャンネルが`DMA_IRQ_0`に固定で、チャンネルごとのIRQ選択はできない)
+- `events.rs` — `AppEvent { ButtonPressed{person_idx}, OccupancyChanged{occupied} }`(サーバーへのPOST用)と`LedEvent { Pressed{person_idx}, Sync{pressed} }`(NeoPixel反映用)、およびそれぞれの共有`Channel`(`EVENT_CHANNEL`/`LED_CHANNEL`)
+- `debounce.rs` — `buttons.rs`/`occupancy.rs`で共有する`Debouncer`: `wait_for_any_edge()`で変化を検知し、指定時間後もレベルが変わったままなら確定とみなす(チャタリングは静かに無視する)
 - `net.rs` — cyw43/embassy-netの初期化、指数バックオフ付きリトライによるWi-Fi接続(一時的なAPの不調から自力で復旧できる必要がある — 動かなくなった基板をデバッグするプローブがないため)
-- `buttons.rs` — `Input::wait_for_rising_edge()`を使った5個の非同期タスク、ピンごとに50msのデバウンス、`ButtonPressed`をプッシュ
-- `occupancy.rs` — 照度センサーの読み取り(要件通りデジタル`Input`による2値信号)、しきい値付近のチャタリングを排除するための確定待ちデバウンス(約2000ms)を経てから`OccupancyChanged`をプッシュ
-- `http_client.rs` — 単一の`reqwless::HttpClient`を所有し、チャンネルを処理して`/api/press`に`{"person":"alice"}`を、`/api/occupancy`に`{"occupied":true}`をPOSTし、`log::info!`/`warn!`で結果をログ出力
+- `buttons.rs` — `Debouncer`を使った5個の非同期タスク(pool_size=5)、ピンごとに50msでデバウンスし、押下確定で`AppEvent::ButtonPressed`(サーバー送信用)と`LedEvent::Pressed`(即時LED点灯用)を両方プッシュ
+- `occupancy.rs` — 照度センサーの読み取り(要件通りデジタル`Input`による2値信号)、`Debouncer`でしきい値付近のチャタリングを排除(約2000ms)してから`AppEvent::OccupancyChanged`をプッシュ
+- `http_client.rs` — 単一の`reqwless::HttpClient`を所有し、`EVENT_CHANNEL`を処理して`/api/press`に`{"person":"alice"}`を、`/api/occupancy`に`{"occupied":true}`をPOSTし、`log::info!`/`warn!`で結果をログ出力
+- `led.rs` — WS2812 NeoPixelチェーン(PIO1 + DMA_CH2、GPIO15、`config::PEOPLE`と同順)を所有。`LED_CHANNEL`を処理し、`Pressed`で即時点灯、`Sync`(`status_poll.rs`から)で全灯を一括反映 — サーバーの日次リセット後にLEDを消す役目もこれが担う
+- `status_poll.rs` — `GET /api/led-state`を`config::LED_SYNC_INTERVAL_SECS`ごとにポーリングし、結果を`LedEvent::Sync`として`LED_CHANNEL`にプッシュ。これがサーバー側の日次リセットや、ファームウェア再起動後の状態復元を反映させる仕組み
+- `audio.rs` — CORE1専属でMAX98357A向けI2S出力(PIO2 + DMA_CH3、GPIO16=BCLK/GPIO17=LRC/GPIO18=DIN、`embassy_rp::pio_programs::i2s`)を行う。`embassy_rp::multicore::spawn_core1`でCORE1を起動し、そこに載せた専用エグゼキュータ上のタスクが256サンプルの共有バッファ`WAVEFORM_BUFFER`(`CriticalSectionRawMutex`でコア間排他)の中身を無限ループで読み出し、`i2s.write().await`し続ける。バッファへ波形サンプルを書き込む処理は未実装で、現状は常に無音を出力する
 
 **ビルド/書き込み(移行後のRP2350/Pico 2 W):** `.cargo/config.toml`で`target = "thumbv8m.main-none-eabihf"`、`runner = "picotool load -u -v -x -t elf"`を設定(`elf2uf2-rs`のUF2出力はRP235xでは動作しないことをembassy-rs/embassy#4322で確認済み)。リンカには`flip-link`を使用(スタックオーバーフローのガードページ — デバッガがない環境では有用。このターゲットでも問題なくリンクできることを確認済み)。`memory.x`はRP2350のブートレイアウト(RP2040のBOOT2領域の代わりに`.start_block`/`.bi_entries`/`.end_block`セクション)を使用しています — `embassy-rp`の`rp235xa`featureが必要な`IMAGE_DEF`ブートブロックを自動的に生成してくれるため、`main.rs`側の変更は不要でした。`cargo run --release`でビルド → BOOTSELモードのPico 2 Wに`picotool`経由で書き込みます。
 
@@ -86,7 +92,7 @@ CREATE TABLE occupancy_log (
 ## 作成されたファイル
 ```
 firmware/Cargo.toml, Cargo.lock, .cargo/config.toml, memory.x, build.rs
-firmware/src/{main,secrets.rs.example,config,events,net,buttons,occupancy,http_client}.rs
+firmware/src/{main,secrets.rs.example,config,irqs,events,debounce,net,buttons,occupancy,http_client,led,status_poll,audio}.rs
 server/{requirements.txt,config.py,schema.sql,db.py,models.py,app.py}
 server/templates/{base,status}.html, server/static/style.css
 server/tests/{conftest.py,test_api.py}
@@ -108,4 +114,4 @@ open localhost:8080/
 ```
 併せて確認すること: 未知の人物 → 400、不正なリクエストボディ → 400、sqliteファイル内の`last_pressed_date`を手動で過去日付にしてリセット処理を確認し、`/api/status`が`false`に切り替わることを確認する。`pytest server/tests/`を実行する。
 
-**ファームウェア(書き込み後):** PicoをBOOTSELモードにして`cargo run --release` → USBシリアル端末を開く(`screen /dev/tty.usbmodemXXXX 115200`) → Wi-Fi接続とIPのログを確認し、その後、物理的なボタン押下によってサーバー側で`POST /api/press 200`が発生すること(Flaskのリクエストログで確認可能)、ダッシュボードのピルが1回の更新サイクル以内に緑色に切り替わること、そしてMAX98357Aアンプがビープ音(`audio.rs`)を、耳で聞いて分かるようなクリッピング/歪みなしに再生することを確認する — クリッピングする場合は`audio.rs`のウェーブテーブルの振幅を調整すること。照度センサーを覆う/覆いを外すを行い、実際の状態遷移1回につき、チャタリングによる大量発生ではなく、デバウンス済みの`occupancy_log`の行がちょうど1行だけ記録されることを確認する。
+**ファームウェア(書き込み後):** PicoをBOOTSELモードにして`cargo run --release` → USBシリアル端末を開く(`screen /dev/tty.usbmodemXXXX 115200`) → Wi-Fi接続とIPのログを確認し、その後、物理的なボタン押下によってサーバー側で`POST /api/press 200`が発生すること(Flaskのリクエストログで確認可能)、ダッシュボードのピルが1回の更新サイクル以内に緑色に切り替わることを確認する。照度センサーを覆う/覆いを外すを行い、実際の状態遷移1回につき、チャタリングによる大量発生ではなく、デバウンス済みの`occupancy_log`の行がちょうど1行だけ記録されることを確認する。オーディオ(`audio.rs`)はCORE1が常時I2Sクロック(BCLK/LRCLK)を出し続けているはずなので、ロジックアナライザ等でGPIO16/17を確認する(波形書き込みが未実装のため、現時点ではDINへの出力・スピーカーからの音は常に無音)。
