@@ -85,8 +85,16 @@ async fn core1_task(
     din: Peri<'static, PIN_18>,
 ) {
     let Pio {
-        mut common, sm0, ..
+        mut common,
+        sm0,
+        sm1,
+        sm2,
+        sm3,
+        ..
     } = Pio::new(pio2, Irqs);
+    // Never drop the unused state machines: see `net.rs` (embassy-rp's PIO
+    // drop bookkeeping is shared by all PIO blocks and would blank pins).
+    core::mem::forget((sm1, sm2, sm3));
     let program = PioI2sOutProgram::new(&mut common);
     let mut i2s = PioI2sOut::new(
         &mut common,

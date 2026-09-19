@@ -2,7 +2,7 @@
 
 今日誰がお風呂に入ったか?を記録する仕組み。浴室に設置したRaspberry Pi Pico 2 Wが5個のボタン(家族一人につき1個)と人感(照度)センサーを読み取り、ボタンが押されるたびにNeoPixelを点灯させ、MAX98357Aアンプ経由で押したボタンごとに異なるメロディを鳴らします。押下はボタンを離した時点で登録され、押し間違いは、ボタンを約2秒長押しすると取り消せます(NeoPixelが消え、取り消し音が鳴ります)。両方の信号はWi-Fi経由で自宅LAN上のFlaskサーバーに送られ、サーバーはライブダッシュボードを表示します。
 
-設計の詳細は`docs/design.md`、HTTPの契約(プロトコル)は`docs/protocol.md`、ピン割り当ては`docs/wiring.md`を参照してください。
+設計の詳細は`docs/design.md`、HTTPの契約(プロトコル)は`docs/protocol.md`、ピン割り当ては`docs/wiring.md`を参照してください。embassy-rpのPIOの不具合の調査記録と回避策は`docs/embassy-rp-pio-drop-bug.md`にまとめています。
 
 ## サーバー
 

@@ -9,6 +9,7 @@ mod events;
 mod http_client;
 mod irqs;
 mod led;
+mod led_pattern;
 mod music;
 mod net;
 mod occupancy;

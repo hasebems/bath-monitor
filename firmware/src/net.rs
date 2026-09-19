@@ -49,19 +49,37 @@ pub async fn init(
 
     let pwr = Output::new(pwr, Level::Low);
     let cs = Output::new(cs, Level::High);
-    let mut pio = Pio::new(pio0, Irqs);
+    let Pio {
+        mut common,
+        sm0,
+        irq0,
+        sm1,
+        sm2,
+        sm3,
+        ..
+    } = Pio::new(pio0, Irqs);
     let spi = PioSpi::new(
-        &mut pio.common,
-        pio.sm0,
+        &mut common,
+        sm0,
         // Pico 2 W needs a divider larger than DEFAULT_CLOCK_DIVIDER or cyw43
         // SPI communication is unreliable (embassy-rs/embassy#3960).
         RM2_CLOCK_DIVIDER,
-        pio.irq0,
+        irq0,
         cs,
         dio,
         clk,
         dma::Channel::new(dma_ch0, Irqs),
     );
+    // Do NOT let the rest of this `Pio` drop when `init` returns.
+    // embassy-rp 0.10.0 (still so upstream) keeps the PIO "users" count and
+    // "used pins" set in a `static` inside a default trait method, which Rust
+    // shares between PIO0, PIO1 and PIO2. Dropping a `Common`/`StateMachine`
+    // therefore decrements one counter for all three blocks, and when it
+    // reaches zero `on_pio_drop` resets *every* recorded pin to NULL — which
+    // silently disconnected the NeoPixel pin (GPIO14) from PIO1 right after
+    // this function returned. Leaking the unused parts keeps that from ever
+    // firing (`led.rs` and `audio.rs` do the same for their unused SMs).
+    core::mem::forget((common, sm1, sm2, sm3));
 
     static STATE: StaticCell<cyw43::State> = StaticCell::new();
     let state = STATE.init(cyw43::State::new());

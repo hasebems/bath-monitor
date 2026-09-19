@@ -67,6 +67,19 @@ pub const AUDIO_RELEASE_RATE: f32 = 0.002;
 pub const AUDIO_DAMP_RATE: f32 = 0.05;
 pub const AUDIO_MINIMUM_LEVEL: f32 = 0.001;
 
+/// `led.rs` writes the whole NeoPixel chain once per frame, every frame,
+/// whether or not anything changed: 100 ms = 10 fps. So the data line is never
+/// idle for long (a single burst per event is hard to catch on a scope, and a
+/// stray glitch on the line is corrected by the next frame), and a change
+/// shows up within one frame.
+pub const NEOPIXEL_FRAME_INTERVAL_MS: u64 = 100;
+/// The look of the NeoPixels is `led_pattern.rs`'s business; its blink (for
+/// people who pressed today) is on for this long, then off for this long.
+/// Frames are only drawn every `NEOPIXEL_FRAME_INTERVAL_MS`, so the actual
+/// on/off durations alternate around this value (250 ms vs. 100 ms frames:
+/// 300/200 ms).
+pub const NEOPIXEL_BLINK_HALF_PERIOD_MS: u64 = 250;
+
 pub const BUTTON_DEBOUNCE_MS: u64 = 50;
 /// Holding a button this long (after the debounced press) cancels that
 /// person's press for today instead — see `buttons.rs`.
