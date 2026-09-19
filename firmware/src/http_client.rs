@@ -71,6 +71,10 @@ async fn send<'a>(
             let _ = write!(url, "{}/api/press", SERVER_BASE_URL);
             let _ = write!(body, "{{\"person\":\"{}\"}}", PEOPLE[person_idx]);
         }
+        Outgoing::Cancel { person_idx, .. } => {
+            let _ = write!(url, "{}/api/cancel", SERVER_BASE_URL);
+            let _ = write!(body, "{{\"person\":\"{}\"}}", PEOPLE[person_idx]);
+        }
         Outgoing::Occupancy { occupied } => {
             let _ = write!(url, "{}/api/occupancy", SERVER_BASE_URL);
             let _ = write!(body, "{{\"occupied\":{}}}", occupied);

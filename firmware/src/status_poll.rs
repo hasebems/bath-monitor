@@ -20,10 +20,11 @@ use crate::wifi;
 /// firmware reboot. Does nothing while Wi-Fi is down, and syncs right away
 /// when it comes back up.
 ///
-/// A person who pressed but whose press the server hasn't acknowledged yet
-/// (`outbox::press_pending`) is kept lit, since the server's answer can't
-/// know about that press yet — otherwise a press made offline would be wiped
-/// off the NeoPixels by the first sync after reconnecting.
+/// A person whose press or cancel the server hasn't acknowledged yet
+/// (`outbox::pending_intent`) keeps the LED that action asked for (lit after
+/// a press, off after a cancel), since the server's answer can't know about
+/// it yet — otherwise a press made offline would be wiped off the NeoPixels
+/// by the first sync after reconnecting, and a cancel would light it again.
 #[embassy_executor::task]
 pub async fn status_poll_task(stack: Stack<'static>) {
     static CLIENT_STATE: static_cell::StaticCell<TcpClientState<1, 512, 512>> =
@@ -37,10 +38,11 @@ pub async fn status_poll_task(stack: Stack<'static>) {
 
     loop {
         if wifi::is_connected() {
-            // Snapshot both before and after the request: a press whose POST
+            // Snapshot both before and after the request: an action whose POST
             // was acknowledged while this GET was in flight is pending in the
-            // first snapshot, one that arrived meanwhile in the second.
-            let pending_before = outbox::pending_presses();
+            // first snapshot, one that arrived meanwhile in the second (which
+            // wins, being the more recent).
+            let pending_before = outbox::pending_intents();
 
             let fetched = with_timeout(
                 Duration::from_secs(SERVER_REQUEST_TIMEOUT_SECS),
@@ -50,9 +52,11 @@ pub async fn status_poll_task(stack: Stack<'static>) {
 
             match fetched {
                 Ok(Some(mut pressed)) => {
-                    let pending_after = outbox::pending_presses();
+                    let pending_after = outbox::pending_intents();
                     for (i, slot) in pressed.iter_mut().enumerate() {
-                        *slot |= pending_before[i] || pending_after[i];
+                        if let Some(intent) = pending_after[i].or(pending_before[i]) {
+                            *slot = intent;
+                        }
                     }
                     LED_CHANNEL.send(LedEvent::Sync { pressed }).await;
                 }

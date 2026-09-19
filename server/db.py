@@ -70,6 +70,18 @@ def record_press(person: str) -> PersonStatus:
     return PersonStatus(id=person, pressed_today=True, last_pressed_at=now_iso)
 
 
+def cancel_press(person: str) -> PersonStatus:
+    """Undoes today's press for `person` (long-press on the panel). Idempotent:
+    cancelling someone who hasn't pressed is a no-op."""
+    with _connect() as conn:
+        conn.execute(
+            "UPDATE press_status SET last_pressed_at = NULL, last_pressed_date = NULL "
+            "WHERE person = ?",
+            (person,),
+        )
+    return PersonStatus(id=person, pressed_today=False, last_pressed_at=None)
+
+
 def record_occupancy(occupied: bool) -> tuple[bool, str]:
     now_iso = datetime.now().astimezone().replace(microsecond=0).isoformat()
     with _connect() as conn:

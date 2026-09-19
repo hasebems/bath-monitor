@@ -65,9 +65,20 @@ static MELODY_4: &[NoteEvent] = &[
     note(50, 67, 100, 40),
 ];
 
-/// Indexed by person_idx (0-4), matching `config::PEOPLE`/`MELODY_CHANNEL`.
-static MUSIC_DATA: [&[NoteEvent]; NUM_PEOPLE] =
-    [MELODY_0, MELODY_1, MELODY_2, MELODY_3, MELODY_4];
+/// "Press cancelled" sound: two low, falling notes, unlike any person's tune.
+/// Placeholder like the melodies above.
+static MELODY_CANCEL: &[NoteEvent] = &[note(0, 55, 100, 15), note(20, 48, 100, 40)];
+
+/// Indexed by person_idx (0-4), matching `config::PEOPLE`, then
+/// `events::CANCEL_MELODY` — the values sent on `MELODY_CHANNEL`.
+static MUSIC_DATA: [&[NoteEvent]; NUM_PEOPLE + 1] = [
+    MELODY_0,
+    MELODY_1,
+    MELODY_2,
+    MELODY_3,
+    MELODY_4,
+    MELODY_CANCEL,
+];
 
 /// Drains `MELODY_CHANNEL` and plays back the selected melody. A new event
 /// arriving mid-playback immediately switches to the new melody from its
@@ -96,8 +107,8 @@ pub async fn music_task() {
         };
 
         match with_timeout(wait, MELODY_CHANNEL.receive()).await {
-            Ok(person_idx) => {
-                score = MUSIC_DATA[person_idx];
+            Ok(melody_idx) => {
+                score = MUSIC_DATA[melody_idx];
                 next_idx = 0;
                 next_slot = 0;
                 start = Instant::now();

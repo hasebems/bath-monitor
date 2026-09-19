@@ -4,12 +4,15 @@
 //! `docs/additional_spec.md`). `http_client.rs`'s `sender_task` drains it
 //! whenever `wifi::is_connected()`.
 //!
-//! - **Presses**: one sequence counter per person, bumped on every press,
-//!   plus the last value the server acknowledged. `seq != acked` means
-//!   "pressed and not yet delivered". A press that lands while an earlier
-//!   one is still in flight bumps the counter again, so it's never lost;
-//!   repeated presses of the same person collapse into one pending send.
-//!   The server treats same-day presses as idempotent, so re-sending is safe.
+//! - **Presses and cancels**: one state word per person — a sequence counter
+//!   bumped on every press or cancel (long-press), with a "was a cancel" flag
+//!   in the low bit — plus the last word the server acknowledged. `state !=
+//!   acked` means "something owed and not yet delivered", and the flag says
+//!   which: only the *latest* action per person is ever sent (a press
+//!   followed by a cancel collapses into a single cancel). An action that
+//!   lands while an earlier one is still in flight changes the word again, so
+//!   it's never lost. The server treats both as idempotent, so re-sending is
+//!   safe.
 //! - **Occupancy**: the latest debounced value, plus the last value the
 //!   server acknowledged. Only the *current* value is ever sent, and only
 //!   when it differs from the last delivered one — changes that happened
@@ -26,8 +29,11 @@ use crate::config::NUM_PEOPLE;
 /// change, or Wi-Fi just came up) so `sender_task` re-checks the state below.
 pub static WORK: Signal<CriticalSectionRawMutex, ()> = Signal::new();
 
-static PRESS_SEQ: [AtomicU32; NUM_PEOPLE] = [const { AtomicU32::new(0) }; NUM_PEOPLE];
+/// `(counter << 1) | is_cancel`; 0 means nothing has happened yet.
+static PRESS_STATE: [AtomicU32; NUM_PEOPLE] = [const { AtomicU32::new(0) }; NUM_PEOPLE];
 static PRESS_ACKED: [AtomicU32; NUM_PEOPLE] = [const { AtomicU32::new(0) }; NUM_PEOPLE];
+
+const CANCEL_FLAG: u32 = 1;
 
 const OCC_UNKNOWN: u8 = 0;
 const OCC_FREE: u8 = 1;
@@ -41,7 +47,9 @@ static OCC_LAST_SENT: AtomicU8 = AtomicU8::new(OCC_UNKNOWN);
 
 /// One thing `sender_task` should try to deliver next.
 pub enum Outgoing {
-    Press { person_idx: usize, seq: u32 },
+    /// `state` is the person's state word being delivered (see `PRESS_STATE`).
+    Press { person_idx: usize, state: u32 },
+    Cancel { person_idx: usize, state: u32 },
     Occupancy { occupied: bool },
 }
 
@@ -51,7 +59,20 @@ pub fn notify() {
 
 /// Records a press. Never blocks, regardless of Wi-Fi/server state.
 pub fn mark_press(person_idx: usize) {
-    PRESS_SEQ[person_idx].fetch_add(1, Ordering::AcqRel);
+    record(person_idx, false);
+}
+
+/// Records a cancel (long-press), superseding any press not yet delivered.
+/// Never blocks, regardless of Wi-Fi/server state.
+pub fn mark_cancel(person_idx: usize) {
+    record(person_idx, true);
+}
+
+fn record(person_idx: usize, cancel: bool) {
+    let flag = if cancel { CANCEL_FLAG } else { 0 };
+    let _ = PRESS_STATE[person_idx].fetch_update(Ordering::AcqRel, Ordering::Acquire, |v| {
+        Some(((v >> 1).wrapping_add(1) << 1) | flag)
+    });
     notify();
 }
 
@@ -62,23 +83,29 @@ pub fn set_occupancy(occupied: bool) {
     notify();
 }
 
-/// Whether `person_idx` pressed but the server hasn't acknowledged it yet
-/// (including while that press's POST is currently in flight).
-pub fn press_pending(person_idx: usize) -> bool {
-    PRESS_SEQ[person_idx].load(Ordering::Acquire) != PRESS_ACKED[person_idx].load(Ordering::Acquire)
+/// What `person_idx` did last that the server hasn't acknowledged yet
+/// (including while that POST is currently in flight): `Some(true)` for a
+/// press, `Some(false)` for a cancel, `None` if nothing is owed.
+pub fn pending_intent(person_idx: usize) -> Option<bool> {
+    let state = PRESS_STATE[person_idx].load(Ordering::Acquire);
+    (state != PRESS_ACKED[person_idx].load(Ordering::Acquire)).then_some(state & CANCEL_FLAG == 0)
 }
 
-pub fn pending_presses() -> [bool; NUM_PEOPLE] {
-    core::array::from_fn(press_pending)
+pub fn pending_intents() -> [Option<bool>; NUM_PEOPLE] {
+    core::array::from_fn(pending_intent)
 }
 
 /// The next thing to deliver, if any. Does not consume it — call `complete`
 /// once the server has answered, otherwise the same item comes back.
 pub fn next() -> Option<Outgoing> {
     for person_idx in 0..NUM_PEOPLE {
-        let seq = PRESS_SEQ[person_idx].load(Ordering::Acquire);
-        if seq != PRESS_ACKED[person_idx].load(Ordering::Acquire) {
-            return Some(Outgoing::Press { person_idx, seq });
+        let state = PRESS_STATE[person_idx].load(Ordering::Acquire);
+        if state != PRESS_ACKED[person_idx].load(Ordering::Acquire) {
+            return Some(if state & CANCEL_FLAG == 0 {
+                Outgoing::Press { person_idx, state }
+            } else {
+                Outgoing::Cancel { person_idx, state }
+            });
         }
     }
 
@@ -92,13 +119,13 @@ pub fn next() -> Option<Outgoing> {
     None
 }
 
-/// Marks `item` as no longer pending. For a press this acknowledges exactly
-/// the sequence number that was sent, so a press that arrived meanwhile
+/// Marks `item` as no longer pending. For a press or cancel this acknowledges
+/// exactly the state word that was sent, so an action that arrived meanwhile
 /// stays pending.
 pub fn complete(item: &Outgoing) {
     match *item {
-        Outgoing::Press { person_idx, seq } => {
-            PRESS_ACKED[person_idx].store(seq, Ordering::Release);
+        Outgoing::Press { person_idx, state } | Outgoing::Cancel { person_idx, state } => {
+            PRESS_ACKED[person_idx].store(state, Ordering::Release);
         }
         Outgoing::Occupancy { occupied } => {
             let v = if occupied { OCC_OCCUPIED } else { OCC_FREE };

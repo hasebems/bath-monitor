@@ -11,6 +11,11 @@ impl<'a> Debouncer<'a> {
         Self { input, debounce }
     }
 
+    /// The input's current (not debounced) level.
+    pub fn level(&self) -> Level {
+        self.input.get_level()
+    }
+
     /// Waits for a level change that is still stable after `debounce`, and
     /// returns the new stable level. Chatter that reverts before the
     /// debounce window elapses is silently discarded.

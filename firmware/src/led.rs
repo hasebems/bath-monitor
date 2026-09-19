@@ -14,8 +14,8 @@ const PRESSED_COLOR: RGB8 = RGB8::new(0, 40, 0);
 const OFF: RGB8 = RGB8::new(0, 0, 0);
 
 /// Owns the WS2812 NeoPixel chain (one LED per person, same order as
-/// `config::PEOPLE`). Lights a pixel immediately on `LedEvent::Pressed` for
-/// instant feedback, and reconciles the whole chain on `LedEvent::Sync`
+/// `config::PEOPLE`). Lights a pixel immediately on `LedEvent::Pressed` (and
+/// turns it off on `LedEvent::Cancelled`) for instant feedback, and reconciles the whole chain on `LedEvent::Sync`
 /// (from `status_poll.rs`), which is what turns LEDs off again after the
 /// server's daily reset.
 /// `pin` must be `config::NEOPIXEL_PIN` (PIO requires a concrete pin type,
@@ -39,6 +39,9 @@ pub async fn led_task(
         match LED_CHANNEL.receive().await {
             LedEvent::Pressed { person_idx } => {
                 data[person_idx] = PRESSED_COLOR;
+            }
+            LedEvent::Cancelled { person_idx } => {
+                data[person_idx] = OFF;
             }
             LedEvent::Sync { pressed } => {
                 for (slot, &is_pressed) in data.iter_mut().zip(pressed.iter()) {

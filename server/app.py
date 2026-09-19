@@ -35,6 +35,15 @@ def create_app() -> Flask:
         status = db.record_press(person)
         return jsonify(status="ok", person=status.id, date=status.last_pressed_at[:10])
 
+    @app.post("/api/cancel")
+    def api_cancel():
+        body = request.get_json(silent=True) or {}
+        person = body.get("person")
+        if person not in config.PEOPLE:
+            return jsonify(status="error", message="unknown person"), 400
+        status = db.cancel_press(person)
+        return jsonify(status="ok", person=status.id)
+
     @app.post("/api/occupancy")
     def api_occupancy():
         body = request.get_json(silent=True) or {}

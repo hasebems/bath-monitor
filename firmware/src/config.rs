@@ -1,7 +1,7 @@
 //! Non-secret configuration. Must match `server/config.py`'s `PEOPLE` order/ids
 //! and `docs/wiring.md`'s pin table.
 
-pub const PEOPLE: [&str; 5] = ["grandpa", "grandma", "father", "mother", "tamaki"];
+pub const PEOPLE: [&str; 5] = ["grandpa", "grandma", "father", "mother", "son"];
 pub const NUM_PEOPLE: usize = PEOPLE.len();
 
 // These pin numbers are documentation, cross-referenced by comments in
@@ -68,6 +68,9 @@ pub const AUDIO_DAMP_RATE: f32 = 0.05;
 pub const AUDIO_MINIMUM_LEVEL: f32 = 0.001;
 
 pub const BUTTON_DEBOUNCE_MS: u64 = 50;
+/// Holding a button this long (after the debounced press) cancels that
+/// person's press for today instead — see `buttons.rs`.
+pub const BUTTON_LONG_PRESS_MS: u64 = 2000;
 pub const OCCUPANCY_DEBOUNCE_MS: u64 = 2000;
 
 /// Half of the onboard LED's blink period (on for this long, then off for
