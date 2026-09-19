@@ -1,7 +1,7 @@
 # 設計: bath-monitor — 「誰がお風呂に入ったか」を記録する家庭用IoTシステム
 
 ## 背景・目的
-`bath-monitor`は、浴室の壁に取り付けるパネルで、5個の押しボタン(家族一人につき1個)と1個の在室用照度センサーを備え、Raspberry Pi Pico 2 Wに配線されています。ボタンを押すと「この人物は今日入浴した」という記録が残ります(1日単位で冪等、ローカル時刻の深夜0時にリセット) — 目的はあくまで今日誰が押した/押していないかを把握することであり、「最後に入ったのは誰か」を計算することではありません。照度センサーは独立して浴室が現在使用中かどうかを報告し、その入退室の履歴は恒久的にログとして保持されます。Pico 2 Wはどちらの信号も、MQTTではなく単純なHTTP POSTで自宅LAN上のFlaskサーバーに送信し、サーバーは自動更新される単一のHTMLダッシュボードを描画します。
+`bath-monitor`は、浴室の壁に取り付けるパネルで、5個の押しボタン(家族一人につき1個)と1個の在室用照度センサーを備え、Raspberry Pi Pico 2 Wに配線されています。あわせて、各ボタンに対応するNeoPixel(その人が今日押していれば点灯)と、ボタン押下時にその人専用のメロディを鳴らすI2Sアンプ(MAX98357A)+スピーカーも搭載します。ボタンを押すと「この人物は今日入浴した」という記録が残ります(1日単位で冪等、ローカル時刻の深夜0時にリセット) — 目的はあくまで今日誰が押した/押していないかを把握することであり、「最後に入ったのは誰か」を計算することではありません。照度センサーは独立して浴室が現在使用中かどうかを報告し、その入退室の履歴は恒久的にログとして保持されます。Pico 2 Wはどちらの信号も、MQTTではなく単純なHTTP POSTで自宅LAN上のFlaskサーバーに送信し、サーバーは自動更新される単一のHTMLダッシュボードを描画します。
 
 **基板の変更履歴**: 当初の実装(以下参照)は元のPico W(RP2040)を対象としていましたが、ファームウェアを実機に一度も書き込む前の2026-09-03に、対象基板をPico 2 W(RP2350)へ変更する方針となり、同日中にファームウェアのコードもRP2350向けに移行しました(`thumbv8m.main-none-eabihf`向けにビルドとclippyの両方を通過済み、実機での書き込み確認はまだ未実施)。Pico 2 Wはピン互換(GPIO番号が同じ)のため、配線・ピンの計画には影響がありませんでした — マイグレーションの詳細な差分(ターゲットのtriple、`embassy-rp`のfeatureフラグ、ブートイメージ形式、書き込みツール、クロック分周比)については`CLAUDE.md`の「Notes for future work」を参照してください。
 
@@ -12,10 +12,13 @@
 ```
 bath-monitor/
 ├── CLAUDE.md, README.md, .gitignore
-├── docs/design.md           # このファイル
+├── docs/design.md           # このファイル(実装済みの内容)
+├── docs/additional_spec.md  # 追加していく外部仕様(実装後も項目は残し、状態を更新する)
 ├── docs/protocol.md         # 正式なHTTP APIの契約(両側の信頼できる情報源)
-├── docs/wiring.md           # GPIOピンの割り当て
+├── docs/wiring.md           # GPIOピン・PIO/DMAの割り当て
+├── docs/deploy.md           # Raspberry Pi 4へのサーバーのデプロイ手順(systemd)
 ├── firmware/                 # Rust、embassy-rp、独立したクレート
+├── schematic/                # KiCadの回路図/基板データ
 └── server/                   # Python、Flask
 ```
 
@@ -26,20 +29,19 @@ bath-monitor/
 - パニックハンドラ: `panic-halt`(RTTベースの`panic-probe`はプローブなしでは意味がないため)。
 - 設定: `src/secrets.rs`(gitignore対象、実際のWi-Fi/サーバー情報)+ `src/secrets.rs.example`(コミットされているテンプレート)+ `src/config.rs`(非秘匿情報: 人物リスト、GPIOピン、デバウンス時間など)。
 - HTTPペイロード: `heapless::String` + `core::write!`による手作りの小さなJSON(`serde`は使わない — ボディはせいぜい1〜2フィールドのため)。
-- タスク間の連携: `embassy_sync::channel::Channel<AppEvent, 8>`を1つ用意 — ボタン/在室タスクはイベントをプッシュするだけで、単一の`sender_task`が`reqwless::HttpClient`を所有し、チャンネルを直列に処理する(ロック不要で、自然にPOSTがレート制限される)。
+- タスク間の連携: `embassy_sync::channel::Channel`を用途別に用意(`events.rs`) — ボタン/在室タスクはイベントをプッシュするだけで、サーバー送信用の`EVENT_CHANNEL`(`Channel<AppEvent, 8>`)を単一の`sender_task`が`reqwless::HttpClient`を所有して直列に処理する(ロック不要で、自然にPOSTがレート制限される)。NeoPixel用の`LED_CHANNEL`、CORE1のメロディ再生用の`MELODY_CHANNEL`も同様に、生産側は送るだけで消費側のタスクが所有・処理する。
 - オーディオ出力: RP2350の2コア目(CORE1)専属で実行(`audio.rs`、`embassy_rp::multicore::spawn_core1`で起動)— PIO2 + DMA_CH3経由のI2S(`embassy_rp::pio_programs::i2s`、GPIO16=BCLK/GPIO17=LRC/GPIO18=DIN、MAX98357Aアンプ宛)によるリアルタイムDMA供給ループを、CORE0側のネットワーク/LED/ボタン処理の遅延から切り離すため。256サンプルの共有バッファ`WAVEFORM_BUFFER`(`CriticalSectionRawMutex` — embassy-rpのSIOハードウェアスピンロック実装によりコア間で安全)の内容を、CORE1が無限ループで読み出しては`i2s.write().await`し続ける設計。バッファへの書き込みは`waveform.rs`が担い、`i2s.write().await`完了ごとに`Signal`(`audio::BUFFER_CONSUMED`)で駆動されることで実際の再生ペースと1:1で同期している(`docs/additional_spec.md`参照)。
 - オーディオ合成: 2 slotのサイン波オシレータ+振幅エンベロープ(attack/release/damp、いずれも「1サンプルごとに目標値へ一定割合で近づく」漸近カーブ)からなる`waveform.rs`のシンセと、5つの固定メロディを`events::MELODY_CHANNEL`(ボタン押下由来のperson_idx)をトリガに再生する`music.rs`の2モジュール構成。サンプリング周波数を意図的に非標準の44,000Hz(=440Hz×100)にすることで、MIDI Note 69(A4=440Hz)がピッチ誤差ゼロで100サンプルの波形テーブルにちょうど一致するようにしてある。attack/release/damp rateとminimum levelは`config.rs`に仮値を置いているだけで実機での聴感調整待ち、5つのメロディ自体もプレースホルダ(`CLAUDE.md`のNotes for future work参照)。
 
-**依存クレートのバージョン**(2026-08-30時点でcrates.ioの実際のリリースに対して検証済み — `net.rs`に依存する前に、これらの正確な固定バージョンで、`embassy-net`のスタック構築APIと`cyw43`のファームウェアBLOB読み込みを、実際に稼働している`embassy-rs/embassy`の`examples/rp/src/bin/wifi_*.rs`と突き合わせて再確認すること。これらのAPIはバージョンによって形が変わっているため):
+**依存クレートのバージョン**(2026-08-30時点でcrates.ioの実際のリリースに対して検証済みで、`firmware/Cargo.lock`で固定。これらのクレートはバージョンによってAPIの形が変わるため、上げる場合は`~/.cargo/registry/src/`の実ソースと突き合わせて確認すること — 詳細は`CLAUDE.md`の「Notes for future work」を参照):
 ```
 embassy-executor 0.10.0, embassy-time 0.5.1, embassy-rp 0.10.0,
 embassy-net 0.9.1 (tcp, dns, dhcpv4), embassy-sync 0.8.0, embassy-usb-logger 0.6.0,
-cyw43 0.7.0, cyw43-pio 0.10.0,
+cyw43 0.7.0, cyw43-pio 0.10.0, smart-leds 0.4.0,
 reqwless 0.14.0, embedded-io-async 0.7.0,
 cortex-m 0.7.9, cortex-m-rt 0.7.6, panic-halt 1.0.0,
-static_cell 2.1.1, heapless 0.9.3, log 0.4.34
+static_cell 2.1.1, heapless 0.9.3, log 0.4.34, portable-atomic 1.15.0 (critical-section)
 ```
-`rand_core`のバージョンが、実際に`embassy-rp 0.10.0`が依存しているものと一致しているかも確認すること。
 
 **モジュール構成:**
 - `main.rs` — エグゼキュータのセットアップ、ハードウェア初期化、全タスクのスポーン
@@ -61,7 +63,7 @@ static_cell 2.1.1, heapless 0.9.3, log 0.4.34
 
 ## サーバー(`server/`、Python + Flask)
 
-**構成:** `Flask==3.1.3`(Jinja2を同梱)に加え、本番用WSGIサーバーとして`waitress==3.0.2`を使用 — このアプリはRaspberry Pi 4上でsystemd経由で24時間365日稼働するため(`docs/deploy.md`参照)、実際にデプロイされるのは`wsgi.py`/waitressの組み合わせです。`app.py`のFlask開発用サーバー(`python app.py`)はローカル開発用としてのみ残しています。永続化は標準ライブラリの`sqlite3`を使用(スキーマは小さなテーブル2つのみで、ORMは不要)。
+**構成:** `Flask==2.2.5`(`Werkzeug==2.2.3`、Jinja2を同梱)に加え、本番用WSGIサーバーとして`waitress==2.1.2`を使用 — このアプリはRaspberry Pi 4上でsystemd経由で24時間365日稼働するため(`docs/deploy.md`参照)、実際にデプロイされるのは`wsgi.py`/waitressの組み合わせです。本番のPiはPython 3.7.3(Raspberry Pi OS Buster)のため、これらは3.7をサポートする最後のリリースに固定してあり、コード側も`from __future__ import annotations`で3.8以降専用の型ヒント構文(`X | Y`、`list[X]`)を避けています(`docs/deploy.md`参照)。`app.py`のFlask開発用サーバー(`python app.py`)はローカル開発用としてのみ残しています。永続化は標準ライブラリの`sqlite3`を使用(スキーマは小さなテーブル2つのみで、ORMは不要)。
 
 **スキーマ(`schema.sql`):**
 ```sql
@@ -86,22 +88,27 @@ CREATE TABLE occupancy_log (
 | POST | `/api/press` | `{"person": "<id>"}` → `config.PEOPLE`に対して検証(未知なら400)、`press_status`をupsert |
 | POST | `/api/occupancy` | `{"occupied": true\|false}` → `occupancy_log`に追記(サーバー側での重複排除はせず、ファームウェア側のデバウンスを信頼する) |
 | GET | `/api/status` | JSONスナップショット: 人物ごとの`pressed_today`/`last_pressed_at`、現在の`occupied`/`occupied_since` |
+| GET | `/api/led-state` | `config.PEOPLE`と同順で1人1文字(押下済みなら`1`、そうでなければ`0`)の`"10100"`形式を`text/plain`で返す — ファームウェアがNeoPixelを同期するための軽量な表現(`docs/protocol.md`参照) |
 | GET | `/` | `/api/status`と同じ`db.get_status()`のデータを使って`templates/status.html`を描画 |
 
-`db.py`は`init_db()`、`get_status()`、`record_press()`、`record_occupancy()`を公開しており、ルート側は薄いまま(パース → 呼び出し → 返却/描画)にしています。
+`db.py`は`init_db()`、`get_status()`、`get_led_state()`、`record_press()`、`record_occupancy()`を公開しており、ルート側は薄いまま(パース → 呼び出し → 返却/描画)にしています。`get_led_state()`は`get_status()`の結果から組み立てており、`/`・`/api/status`・`/api/led-state`はすべて同じ`get_status()`を情報源にしています(クエリ処理を各ルートに重複させない)。戻り値の型は`models.py`のdataclass(`PersonStatus`/`Status`)、設定値(`PEOPLE`、ホスト/ポート、DBパス)は`config.py`にあります。
 
 **ページ:** `templates/base.html` + `status.html`、`<meta http-equiv="refresh" content="5">`(自宅LAN向けのダッシュボードなのでJS/WebSocketは不要) — 5人分を色付きのピル(押した/押していない)で表示し、在室状態のバナーを1つ表示(在室中/不在 + 開始時刻)。`static/style.css`で最小限のスタイリングを行います。
 
 ## 作成されたファイル
 ```
 firmware/Cargo.toml, Cargo.lock, .cargo/config.toml, memory.x, build.rs
-firmware/src/{main,secrets.rs.example,config,irqs,events,debounce,net,buttons,occupancy,http_client,led,status_poll,audio}.rs
-server/{requirements.txt,config.py,schema.sql,db.py,models.py,app.py}
+firmware/cyw43-firmware/   (cyw43のファームウェア/CLM/nvramのBLOB)
+firmware/src/{main,secrets.rs.example,config,irqs,events,debounce,net,buttons,occupancy,http_client,led,status_poll,audio,waveform,music}.rs
+                            (secrets.rsは実際のWi-Fi情報を入れるgitignore対象のファイル)
+server/{requirements.txt,config.py,schema.sql,db.py,models.py,app.py,wsgi.py}
+server/deploy/bath-monitor.service
 server/templates/{base,status}.html, server/static/style.css
 server/tests/{conftest.py,test_api.py}
 server/data/.gitkeep   (bath_monitor.dbは実行時状態のためgitignore対象)
-docs/design.md, docs/protocol.md, docs/wiring.md
-README.md, .gitignore  (target/, secrets.rs, __pycache__/, .venv/, *.db, .DS_Store)
+docs/{design,additional_spec,protocol,wiring,deploy}.md
+schematic/             (KiCadの回路図/基板データ)
+README.md, .gitignore  (firmware/target/, firmware/src/secrets.rs, __pycache__/, .venv/, server/data/*.db, .pytest_cache/, schematic/bath-monitor-backups, .DS_Store)
 ```
 
 ## 検証手順
@@ -117,4 +124,4 @@ open localhost:8080/
 ```
 併せて確認すること: 未知の人物 → 400、不正なリクエストボディ → 400、sqliteファイル内の`last_pressed_date`を手動で過去日付にしてリセット処理を確認し、`/api/status`が`false`に切り替わることを確認する。`pytest server/tests/`を実行する。
 
-**ファームウェア(書き込み後):** PicoをBOOTSELモードにして`cargo run --release` → USBシリアル端末を開く(`screen /dev/tty.usbmodemXXXX 115200`) → Wi-Fi接続とIPのログを確認し、その後、物理的なボタン押下によってサーバー側で`POST /api/press 200`が発生すること(Flaskのリクエストログで確認可能)、ダッシュボードのピルが1回の更新サイクル以内に緑色に切り替わることを確認する。照度センサーを覆う/覆いを外すを行い、実際の状態遷移1回につき、チャタリングによる大量発生ではなく、デバウンス済みの`occupancy_log`の行がちょうど1行だけ記録されることを確認する。オーディオ(`audio.rs`)はCORE1が常時I2Sクロック(BCLK/LRCLK)を出し続けているはずなので、ロジックアナライザ等でGPIO16/17を確認する(波形書き込みが未実装のため、現時点ではDINへの出力・スピーカーからの音は常に無音)。
+**ファームウェア(書き込み後):** PicoをBOOTSELモードにして`cargo run --release` → USBシリアル端末を開く(`screen /dev/tty.usbmodemXXXX 115200`) → Wi-Fi接続とIPのログを確認し、その後、物理的なボタン押下によってサーバー側で`POST /api/press 200`が発生すること(Flaskのリクエストログで確認可能)、ダッシュボードのピルが1回の更新サイクル以内に緑色に切り替わることを確認する。照度センサーを覆う/覆いを外すを行い、実際の状態遷移1回につき、チャタリングによる大量発生ではなく、デバウンス済みの`occupancy_log`の行がちょうど1行だけ記録されることを確認する。ボタン押下で該当する人物のNeoPixelがすぐに点灯することも確認する。オーディオ(`audio.rs`/`waveform.rs`/`music.rs`)は、各ボタンを押してそれぞれ異なるメロディがスピーカーから鳴ること、再生中に別のボタン(または同じボタン)を押すと途中から新しいメロディに切り替わること、音割れがないことを確認する(メロディはプレースホルダで、attack/release/damp rateやminimum levelも仮値のため、聴感による調整もここで行う)。スピーカー接続前は、ロジックアナライザ等でGPIO16/17(BCLK/LRCLK)に常時クロックが出ていること、ボタン押下時にGPIO18(DIN)へ波形が出ることを確認する。
