@@ -10,9 +10,10 @@ use crate::outbox;
 /// One instance per button (pool_size must match `config::NUM_PEOPLE`).
 /// Pull-up input, button wired to GND: a press reads as `Level::Low`.
 ///
-/// A press registers immediately (instant LED/melody feedback); if the button
-/// is then still held after `BUTTON_LONG_PRESS_MS`, that person's press for
-/// today is cancelled again (LED off, cancel sound, `POST /api/cancel`).
+/// Releasing within `BUTTON_LONG_PRESS_MS` of the press registers it (LED,
+/// melody, `POST /api/press`); holding longer instead cancels that person's
+/// press for today (LED off, cancel sound, `POST /api/cancel`) — and plays
+/// no press melody, so the two never sound alike.
 #[embassy_executor::task(pool_size = 5)]
 pub async fn button_task(pin: Peri<'static, AnyPin>, person_idx: usize) {
     let mut debouncer = Debouncer::new(
@@ -26,24 +27,23 @@ pub async fn button_task(pin: Peri<'static, AnyPin>, person_idx: usize) {
             continue;
         }
 
-        log::info!("button {} pressed", person_idx);
-        // Just records that the server owes a delivery: never blocks and
-        // doesn't care whether Wi-Fi is up (`sender_task` delivers it, and
-        // keeps retrying, once it can). The LED and melody below must never
-        // wait on anything network-related.
-        outbox::mark_press(person_idx);
-        LED_CHANNEL.send(LedEvent::Pressed { person_idx }).await;
-        MELODY_CHANNEL.send(person_idx).await;
-
-        // Released within the long-press time: a plain press, nothing more.
-        // (`debounce` is cancel-safe: it only keeps locals across awaits. The
-        // level check covers the release landing right at the deadline.)
+        // Released within the long-press time: a plain press. (`debounce` is
+        // cancel-safe: it only keeps locals across awaits. The level check
+        // covers the release landing right at the deadline.)
         let released = with_timeout(
             Duration::from_millis(BUTTON_LONG_PRESS_MS),
             debouncer.debounce(),
         )
         .await;
         if released.is_ok() || debouncer.level() != Level::Low {
+            log::info!("button {} pressed", person_idx);
+            // Just records that the server owes a delivery: never blocks and
+            // doesn't care whether Wi-Fi is up (`sender_task` delivers it, and
+            // keeps retrying, once it can). The LED and melody below must never
+            // wait on anything network-related.
+            outbox::mark_press(person_idx);
+            LED_CHANNEL.send(LedEvent::Pressed { person_idx }).await;
+            MELODY_CHANNEL.send(person_idx).await;
             continue;
         }
 

@@ -5,7 +5,7 @@ use crate::config::NUM_PEOPLE;
 
 /// Events that update the NeoPixel chain.
 pub enum LedEvent {
-    /// Immediate local feedback: a button was just pressed.
+    /// Immediate local feedback: a button was just pressed (and released).
     Pressed { person_idx: usize },
     /// Immediate local feedback: a button was just long-pressed to cancel.
     Cancelled { person_idx: usize },
