@@ -4,7 +4,7 @@ use embassy_time::Duration;
 
 use crate::config::OCCUPANCY_DEBOUNCE_MS;
 use crate::debounce::Debouncer;
-use crate::events::{AppEvent, EVENT_CHANNEL};
+use crate::outbox;
 
 /// Light sensor wired to read `Level::Low` when the bath is occupied
 /// (adjust the `Level::Low` comparison below if the sensor board's polarity
@@ -21,8 +21,6 @@ pub async fn occupancy_task(pin: Peri<'static, AnyPin>) {
         let level = debouncer.debounce().await;
         let occupied = level == Level::Low;
         log::info!("occupancy changed: occupied={}", occupied);
-        EVENT_CHANNEL
-            .send(AppEvent::OccupancyChanged { occupied })
-            .await;
+        outbox::set_occupancy(occupied);
     }
 }

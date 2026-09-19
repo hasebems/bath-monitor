@@ -3,19 +3,27 @@ use core::fmt::Write as _;
 use embassy_net::dns::DnsSocket;
 use embassy_net::tcp::client::{TcpClient, TcpClientState};
 use embassy_net::Stack;
-use embassy_time::{Duration, Timer};
+use embassy_time::{with_timeout, Duration};
 use heapless::String;
 use reqwless::client::HttpClient;
 use reqwless::request::Method;
 
-use crate::config::{LED_SYNC_INTERVAL_SECS, NUM_PEOPLE};
+use crate::config::{LED_SYNC_INTERVAL_SECS, NUM_PEOPLE, SERVER_REQUEST_TIMEOUT_SECS};
 use crate::events::{LedEvent, LED_CHANNEL};
+use crate::outbox;
 use crate::secrets::SERVER_BASE_URL;
+use crate::wifi;
 
 /// Periodically fetches `GET /api/led-state` and reconciles all NeoPixels
 /// with the server's `pressed_today` state. This is what clears the LEDs
 /// after the server's daily reset and restores correct state after a
-/// firmware reboot.
+/// firmware reboot. Does nothing while Wi-Fi is down, and syncs right away
+/// when it comes back up.
+///
+/// A person who pressed but whose press the server hasn't acknowledged yet
+/// (`outbox::press_pending`) is kept lit, since the server's answer can't
+/// know about that press yet — otherwise a press made offline would be wiped
+/// off the NeoPixels by the first sync after reconnecting.
 #[embassy_executor::task]
 pub async fn status_poll_task(stack: Stack<'static>) {
     static CLIENT_STATE: static_cell::StaticCell<TcpClientState<1, 512, 512>> =
@@ -28,10 +36,37 @@ pub async fn status_poll_task(stack: Stack<'static>) {
     let _ = write!(url, "{}/api/led-state", SERVER_BASE_URL);
 
     loop {
-        if let Some(pressed) = fetch_led_state(&tcp_client, &dns_client, &url).await {
-            LED_CHANNEL.send(LedEvent::Sync { pressed }).await;
+        if wifi::is_connected() {
+            // Snapshot both before and after the request: a press whose POST
+            // was acknowledged while this GET was in flight is pending in the
+            // first snapshot, one that arrived meanwhile in the second.
+            let pending_before = outbox::pending_presses();
+
+            let fetched = with_timeout(
+                Duration::from_secs(SERVER_REQUEST_TIMEOUT_SECS),
+                fetch_led_state(&tcp_client, &dns_client, &url),
+            )
+            .await;
+
+            match fetched {
+                Ok(Some(mut pressed)) => {
+                    let pending_after = outbox::pending_presses();
+                    for (i, slot) in pressed.iter_mut().enumerate() {
+                        *slot |= pending_before[i] || pending_after[i];
+                    }
+                    LED_CHANNEL.send(LedEvent::Sync { pressed }).await;
+                }
+                Ok(None) => {}
+                Err(_) => log::warn!("led-state poll: timed out"),
+            }
         }
-        Timer::after(Duration::from_secs(LED_SYNC_INTERVAL_SECS)).await;
+
+        // Next poll after the normal interval, or as soon as Wi-Fi (re)connects.
+        let _ = with_timeout(
+            Duration::from_secs(LED_SYNC_INTERVAL_SECS),
+            wifi::WIFI_UP.wait(),
+        )
+        .await;
     }
 }
 

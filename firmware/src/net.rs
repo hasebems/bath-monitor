@@ -1,4 +1,4 @@
-use cyw43::{aligned_bytes, JoinOptions};
+use cyw43::aligned_bytes;
 use cyw43_pio::{PioSpi, RM2_CLOCK_DIVIDER};
 use embassy_executor::Spawner;
 use embassy_net::{Config, Runner as NetRunner, Stack, StackResources};
@@ -8,11 +8,9 @@ use embassy_rp::gpio::{Level, Output};
 use embassy_rp::peripherals::{DMA_CH0, PIN_23, PIN_24, PIN_25, PIN_29, PIO0};
 use embassy_rp::pio::Pio;
 use embassy_rp::Peri;
-use embassy_time::{Duration, Timer};
 use static_cell::StaticCell;
 
 use crate::irqs::Irqs;
-use crate::secrets::{SERVER_BASE_URL, WIFI_PASSWORD, WIFI_SSID};
 
 #[embassy_executor::task]
 async fn cyw43_task(
@@ -26,10 +24,12 @@ async fn net_task(mut runner: NetRunner<'static, cyw43::NetDriver<'static>>) -> 
     runner.run().await
 }
 
-/// Brings up the cyw43 Wi-Fi chip and joins the configured network, retrying
-/// with exponential backoff on failure so a transient AP outage recovers
-/// without a physical reflash/power-cycle. Returns the ready `Stack` handle
-/// (DHCP + link already up) for use by `http_client.rs`/`status_poll.rs`.
+/// Brings up the cyw43 Wi-Fi chip and the embassy-net stack, but does *not*
+/// join a network — that's `wifi.rs`'s job, so nothing else in the firmware
+/// has to wait on Wi-Fi. Returns the `Stack` handle (usable for
+/// `http_client.rs`/`status_poll.rs` from the start; DHCP completes on its own
+/// once `wifi_task` gets the link up) and the cyw43 `Control` handle, which
+/// `main.rs` hands to `wifi_task`.
 pub async fn init(
     spawner: Spawner,
     pwr: Peri<'static, PIN_23>,
@@ -38,7 +38,7 @@ pub async fn init(
     dio: Peri<'static, PIN_24>,
     clk: Peri<'static, PIN_29>,
     dma_ch0: Peri<'static, DMA_CH0>,
-) -> Stack<'static> {
+) -> (Stack<'static>, cyw43::Control<'static>) {
     let mut rng = RoscRng;
 
     let fw = aligned_bytes!("../cyw43-firmware/43439A0.bin");
@@ -84,29 +84,7 @@ pub async fn init(
     );
     spawner.spawn(net_task(runner).unwrap());
 
-    let mut backoff = Duration::from_secs(1);
-    const MAX_BACKOFF: Duration = Duration::from_secs(30);
-    loop {
-        match control
-            .join(WIFI_SSID, JoinOptions::new(WIFI_PASSWORD.as_bytes()))
-            .await
-        {
-            Ok(()) => break,
-            Err(err) => {
-                log::warn!("wifi join failed: {:?}, retrying in {:?}", err, backoff);
-                Timer::after(backoff).await;
-                backoff = core::cmp::min(backoff * 2, MAX_BACKOFF);
-            }
-        }
-    }
+    log::info!("network stack ready (not yet joined to Wi-Fi)");
 
-    log::info!("waiting for link...");
-    stack.wait_link_up().await;
-
-    log::info!("waiting for DHCP...");
-    stack.wait_config_up().await;
-
-    log::info!("network up, server base url: {}", SERVER_BASE_URL);
-
-    stack
+    (stack, control)
 }

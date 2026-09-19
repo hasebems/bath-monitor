@@ -4,7 +4,8 @@ use embassy_time::Duration;
 
 use crate::config::BUTTON_DEBOUNCE_MS;
 use crate::debounce::Debouncer;
-use crate::events::{AppEvent, LedEvent, EVENT_CHANNEL, LED_CHANNEL, MELODY_CHANNEL};
+use crate::events::{LedEvent, LED_CHANNEL, MELODY_CHANNEL};
+use crate::outbox;
 
 /// One instance per button (pool_size must match `config::NUM_PEOPLE`).
 /// Pull-up input, button wired to GND: a press reads as `Level::Low`.
@@ -19,9 +20,11 @@ pub async fn button_task(pin: Peri<'static, AnyPin>, person_idx: usize) {
         let level = debouncer.debounce().await;
         if level == Level::Low {
             log::info!("button {} pressed", person_idx);
-            EVENT_CHANNEL
-                .send(AppEvent::ButtonPressed { person_idx })
-                .await;
+            // Just records that the server owes a delivery: never blocks and
+            // doesn't care whether Wi-Fi is up (`sender_task` delivers it, and
+            // keeps retrying, once it can). The LED and melody below must never
+            // wait on anything network-related.
+            outbox::mark_press(person_idx);
             LED_CHANNEL.send(LedEvent::Pressed { person_idx }).await;
             MELODY_CHANNEL.send(person_idx).await;
         }

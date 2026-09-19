@@ -3,19 +3,34 @@ use core::fmt::Write as _;
 use embassy_net::dns::DnsSocket;
 use embassy_net::tcp::client::{TcpClient, TcpClientState};
 use embassy_net::Stack;
+use embassy_time::{with_timeout, Duration, Timer};
 use heapless::String;
 use reqwless::client::HttpClient;
 use reqwless::headers::ContentType;
 use reqwless::request::{Method, RequestBuilder};
 
-use crate::config::PEOPLE;
-use crate::events::{AppEvent, EVENT_CHANNEL};
+use crate::config::{PEOPLE, SEND_RETRY_INTERVAL_SECS, SERVER_REQUEST_TIMEOUT_SECS};
+use crate::outbox::{self, Outgoing};
 use crate::secrets::SERVER_BASE_URL;
+use crate::wifi;
 
-/// Owns the only network client in the firmware; drains `EVENT_CHANNEL` and
-/// POSTs each event to the server, serially. This is also what naturally
-/// rate-limits outgoing requests, since button/occupancy tasks never block
-/// on network I/O themselves.
+/// What happened to one delivery attempt.
+enum Outcome {
+    /// The server accepted it (2xx).
+    Delivered,
+    /// The server refused it (4xx, e.g. an unknown person id): retrying the
+    /// same request can't succeed, so it's dropped rather than retried forever.
+    Rejected,
+    /// No usable answer (couldn't connect, timed out, 5xx, ...): try again.
+    Retry,
+}
+
+/// Owns the only client that POSTs to the server. Delivers whatever
+/// `outbox` says is still owed, one request at a time, but only while Wi-Fi
+/// is connected; on failure it keeps the item pending and retries every
+/// `SEND_RETRY_INTERVAL_SECS`, so a press made offline (or while the server
+/// was down) still gets through eventually. Button/occupancy tasks only
+/// record state in `outbox`, so they never wait on any of this.
 #[embassy_executor::task]
 pub async fn sender_task(stack: Stack<'static>) {
     static CLIENT_STATE: static_cell::StaticCell<TcpClientState<1, 1024, 1024>> =
@@ -25,22 +40,54 @@ pub async fn sender_task(stack: Stack<'static>) {
     let dns_client = DnsSocket::new(stack);
 
     loop {
-        let event = EVENT_CHANNEL.receive().await;
+        outbox::WORK.wait().await;
 
-        let mut url: String<128> = String::new();
-        let mut body: String<64> = String::new();
-        match event {
-            AppEvent::ButtonPressed { person_idx } => {
-                let _ = write!(url, "{}/api/press", SERVER_BASE_URL);
-                let _ = write!(body, "{{\"person\":\"{}\"}}", PEOPLE[person_idx]);
-            }
-            AppEvent::OccupancyChanged { occupied } => {
-                let _ = write!(url, "{}/api/occupancy", SERVER_BASE_URL);
-                let _ = write!(body, "{{\"occupied\":{}}}", occupied);
+        while wifi::is_connected() {
+            let Some(item) = outbox::next() else { break };
+
+            match send(&tcp_client, &dns_client, &item).await {
+                Outcome::Delivered => outbox::complete(&item),
+                Outcome::Rejected => {
+                    log::error!("server rejected a request; dropping it");
+                    outbox::complete(&item);
+                }
+                Outcome::Retry => {
+                    Timer::after(Duration::from_secs(SEND_RETRY_INTERVAL_SECS)).await;
+                }
             }
         }
+    }
+}
 
-        post(&tcp_client, &dns_client, &url, &body).await;
+async fn send<'a>(
+    tcp_client: &'a TcpClient<'a, 1, 1024, 1024>,
+    dns_client: &'a DnsSocket<'a>,
+    item: &Outgoing,
+) -> Outcome {
+    let mut url: String<128> = String::new();
+    let mut body: String<64> = String::new();
+    match *item {
+        Outgoing::Press { person_idx, .. } => {
+            let _ = write!(url, "{}/api/press", SERVER_BASE_URL);
+            let _ = write!(body, "{{\"person\":\"{}\"}}", PEOPLE[person_idx]);
+        }
+        Outgoing::Occupancy { occupied } => {
+            let _ = write!(url, "{}/api/occupancy", SERVER_BASE_URL);
+            let _ = write!(body, "{{\"occupied\":{}}}", occupied);
+        }
+    }
+
+    match with_timeout(
+        Duration::from_secs(SERVER_REQUEST_TIMEOUT_SECS),
+        post(tcp_client, dns_client, &url, &body),
+    )
+    .await
+    {
+        Ok(outcome) => outcome,
+        Err(_) => {
+            log::warn!("POST {} timed out", url);
+            Outcome::Retry
+        }
     }
 }
 
@@ -49,7 +96,7 @@ async fn post<'a>(
     dns_client: &'a DnsSocket<'a>,
     url: &str,
     body: &str,
-) {
+) -> Outcome {
     let mut http_client = HttpClient::new(tcp_client, dns_client);
     let mut rx_buffer = [0u8; 512];
 
@@ -57,7 +104,7 @@ async fn post<'a>(
         Ok(req) => req,
         Err(e) => {
             log::warn!("failed to connect for {}: {:?}", url, e);
-            return;
+            return Outcome::Retry;
         }
     };
 
@@ -66,7 +113,18 @@ async fn post<'a>(
         .content_type(ContentType::ApplicationJson);
 
     match request.send(&mut rx_buffer).await {
-        Ok(response) => log::info!("POST {} -> {}", url, response.status.0),
-        Err(e) => log::warn!("failed to send {}: {:?}", url, e),
+        Ok(response) => {
+            let status = response.status.0;
+            log::info!("POST {} -> {}", url, status);
+            match status {
+                200..=299 => Outcome::Delivered,
+                400..=499 => Outcome::Rejected,
+                _ => Outcome::Retry,
+            }
+        }
+        Err(e) => {
+            log::warn!("failed to send {}: {:?}", url, e);
+            Outcome::Retry
+        }
     }
 }

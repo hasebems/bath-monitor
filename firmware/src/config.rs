@@ -70,6 +70,23 @@ pub const AUDIO_MINIMUM_LEVEL: f32 = 0.001;
 pub const BUTTON_DEBOUNCE_MS: u64 = 50;
 pub const OCCUPANCY_DEBOUNCE_MS: u64 = 2000;
 
+/// Half of the onboard LED's blink period (on for this long, then off for
+/// this long) — see `wifi.rs`. 500ms gives a 1Hz blink.
+pub const ONBOARD_LED_BLINK_HALF_PERIOD_MS: u64 = 500;
+
+/// Upper bound for a whole HTTP request to the server (connect + send +
+/// response), after which it's abandoned and treated as failed so the
+/// sender/poll tasks can never hang on an unreachable server.
+pub const SERVER_REQUEST_TIMEOUT_SECS: u64 = 10;
+
+/// How long `http_client.rs` waits before re-trying a POST that failed
+/// while Wi-Fi is still up (e.g. the server is down).
+pub const SEND_RETRY_INTERVAL_SECS: u64 = 5;
+
+/// After a successful `join`, how long `wifi.rs` tolerates the link not
+/// being reported up yet before it gives up on that association and re-joins.
+pub const WIFI_LINK_UP_GRACE_SECS: u64 = 10;
+
 /// How often the firmware polls `GET /api/led-state` to reconcile NeoPixels
 /// with the server's daily-reset state.
 pub const LED_SYNC_INTERVAL_SECS: u64 = 30;
