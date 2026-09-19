@@ -73,12 +73,6 @@ pub const AUDIO_MINIMUM_LEVEL: f32 = 0.001;
 /// stray glitch on the line is corrected by the next frame), and a change
 /// shows up within one frame.
 pub const NEOPIXEL_FRAME_INTERVAL_MS: u64 = 100;
-/// The look of the NeoPixels is `led_pattern.rs`'s business; its blink (for
-/// people who pressed today) is on for this long, then off for this long.
-/// Frames are only drawn every `NEOPIXEL_FRAME_INTERVAL_MS`, so the actual
-/// on/off durations alternate around this value (250 ms vs. 100 ms frames:
-/// 300/200 ms).
-pub const NEOPIXEL_BLINK_HALF_PERIOD_MS: u64 = 250;
 
 pub const BUTTON_DEBOUNCE_MS: u64 = 50;
 /// Holding a button this long (after the debounced press) cancels that
