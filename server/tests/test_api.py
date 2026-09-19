@@ -19,25 +19,25 @@ def test_press_unknown_person_is_rejected(client):
 
 
 def test_press_marks_person_pressed_today(client):
-    resp = client.post("/api/press", json={"person": "alice"})
+    resp = client.post("/api/press", json={"person": "grandpa"})
     assert resp.status_code == 200
-    assert resp.get_json()["person"] == "alice"
+    assert resp.get_json()["person"] == "grandpa"
 
     status = client.get("/api/status").get_json()
-    alice = next(p for p in status["people"] if p["id"] == "alice")
-    assert alice["pressed_today"] is True
+    grandpa = next(p for p in status["people"] if p["id"] == "grandpa")
+    assert grandpa["pressed_today"] is True
 
-    bob = next(p for p in status["people"] if p["id"] == "bob")
-    assert bob["pressed_today"] is False
+    grandma = next(p for p in status["people"] if p["id"] == "grandma")
+    assert grandma["pressed_today"] is False
 
 
 def test_press_is_idempotent_same_day(client):
-    client.post("/api/press", json={"person": "alice"})
-    resp = client.post("/api/press", json={"person": "alice"})
+    client.post("/api/press", json={"person": "grandpa"})
+    resp = client.post("/api/press", json={"person": "grandpa"})
     assert resp.status_code == 200
 
     status = client.get("/api/status").get_json()
-    assert sum(1 for p in status["people"] if p["id"] == "alice") == 1
+    assert sum(1 for p in status["people"] if p["id"] == "grandpa") == 1
 
 
 def test_occupancy_requires_boolean(client):
@@ -59,11 +59,11 @@ def test_led_state_reflects_presses(client):
     resp = client.get("/api/led-state")
     assert resp.data.decode() == "0" * len(config.PEOPLE)
 
-    client.post("/api/press", json={"person": "alice"})
-    client.post("/api/press", json={"person": "carol"})
+    client.post("/api/press", json={"person": "grandpa"})
+    client.post("/api/press", json={"person": "father"})
 
     resp = client.get("/api/led-state")
-    expected = "".join("1" if p in ("alice", "carol") else "0" for p in config.PEOPLE)
+    expected = "".join("1" if p in ("grandpa", "father") else "0" for p in config.PEOPLE)
     assert resp.data.decode() == expected
 
 

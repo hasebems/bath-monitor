@@ -1,7 +1,7 @@
 //! Non-secret configuration. Must match `server/config.py`'s `PEOPLE` order/ids
 //! and `docs/wiring.md`'s pin table.
 
-pub const PEOPLE: [&str; 5] = ["alice", "bob", "carol", "dave", "eve"];
+pub const PEOPLE: [&str; 5] = ["grandpa", "grandma", "father", "mother", "tamaki"];
 pub const NUM_PEOPLE: usize = PEOPLE.len();
 
 // These pin numbers are documentation, cross-referenced by comments in
@@ -74,6 +74,12 @@ pub const OCCUPANCY_DEBOUNCE_MS: u64 = 2000;
 /// this long) — see `wifi.rs`. 500ms gives a 1Hz blink.
 pub const ONBOARD_LED_BLINK_HALF_PERIOD_MS: u64 = 500;
 
+/// Onboard LED "join failed" pattern (see `wifi.rs`): two short flashes, each
+/// on for this long and off for this long...
+pub const ONBOARD_LED_FAIL_FLASH_MS: u64 = 100;
+/// ...then off for this long before the pair repeats.
+pub const ONBOARD_LED_FAIL_PATTERN_GAP_MS: u64 = 1600;
+
 /// Upper bound for a whole HTTP request to the server (connect + send +
 /// response), after which it's abandoned and treated as failed so the
 /// sender/poll tasks can never hang on an unreachable server.
@@ -86,6 +92,11 @@ pub const SEND_RETRY_INTERVAL_SECS: u64 = 5;
 /// After a successful `join`, how long `wifi.rs` tolerates the link not
 /// being reported up yet before it gives up on that association and re-joins.
 pub const WIFI_LINK_UP_GRACE_SECS: u64 = 10;
+
+/// Longest a single `join` attempt in `wifi.rs` may take before it's
+/// abandoned and treated as failed. cyw43's `join` has no timeout of its own
+/// and can wait forever if the chip never reports an outcome.
+pub const WIFI_JOIN_TIMEOUT_SECS: u64 = 20;
 
 /// How often the firmware polls `GET /api/led-state` to reconcile NeoPixels
 /// with the server's daily-reset state.

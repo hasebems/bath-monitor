@@ -7,10 +7,14 @@
 //! This task also drives the Pico 2 W's onboard LED (see "オンボードLEDの
 //! ハートビート点滅" there): it hangs off the CYW43439's GPIO0 (`WL_GPIO0`),
 //! not an RP2350 GPIO, so it's only reachable through `Control`, which
-//! `join` also needs `&mut` access to. The LED blinks whenever this task is
-//! between `join` calls (backing off, or watching the link), and is held on
-//! for the duration of a `join` since that call has no timeout and can't be
-//! interleaved with anything else.
+//! `join` also needs `&mut` access to. The LED shows the join outcome:
+//!
+//! - held on while a `join` call is in progress (it can't be interleaved
+//!   with anything else; cyw43 gives it no timeout, so this task adds one
+//!   — `WIFI_JOIN_TIMEOUT_SECS` — and counts running over as a failure);
+//! - 1Hz blink once a `join` has succeeded (while watching the link);
+//! - "ピピ" — two short flashes, then a gap, repeated — after a `join`
+//!   failed, until the next attempt starts.
 
 use core::sync::atomic::{AtomicBool, Ordering};
 
@@ -18,9 +22,12 @@ use cyw43::{Control, JoinOptions};
 use embassy_net::Stack;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::signal::Signal;
-use embassy_time::{Duration, Instant, Timer};
+use embassy_time::{with_timeout, Duration, Instant, Timer};
 
-use crate::config::{ONBOARD_LED_BLINK_HALF_PERIOD_MS, WIFI_LINK_UP_GRACE_SECS};
+use crate::config::{
+    ONBOARD_LED_BLINK_HALF_PERIOD_MS, ONBOARD_LED_FAIL_FLASH_MS, ONBOARD_LED_FAIL_PATTERN_GAP_MS,
+    WIFI_JOIN_TIMEOUT_SECS, WIFI_LINK_UP_GRACE_SECS,
+};
 use crate::outbox;
 use crate::secrets::{SERVER_BASE_URL, WIFI_PASSWORD, WIFI_SSID};
 
@@ -59,23 +66,44 @@ struct Blinker {
 }
 
 impl Blinker {
-    async fn hold_on(&mut self, control: &mut Control<'static>) {
-        self.on = true;
-        control.gpio_set(ONBOARD_LED_WL_GPIO, true).await;
+    async fn set(&mut self, control: &mut Control<'static>, on: bool) {
+        self.on = on;
+        control.gpio_set(ONBOARD_LED_WL_GPIO, on).await;
     }
 
-    /// Toggles the LED, then waits one half-period.
+    async fn hold_on(&mut self, control: &mut Control<'static>) {
+        self.set(control, true).await;
+    }
+
+    /// One step of the 1Hz "joined" blink: toggles the LED, then waits one
+    /// half-period.
     async fn tick(&mut self, control: &mut Control<'static>) {
-        self.on = !self.on;
-        control.gpio_set(ONBOARD_LED_WL_GPIO, self.on).await;
+        let on = !self.on;
+        self.set(control, on).await;
         Timer::after(Duration::from_millis(ONBOARD_LED_BLINK_HALF_PERIOD_MS)).await;
     }
 
-    async fn blink_for(&mut self, control: &mut Control<'static>, total: Duration) {
+    /// The "join failed" pattern — two short flashes, then a gap, repeated —
+    /// for `total`, starting immediately and leaving the LED off at the end.
+    async fn failure_pattern_for(&mut self, control: &mut Control<'static>, total: Duration) {
         let end = Instant::now() + total;
+        let flash = Duration::from_millis(ONBOARD_LED_FAIL_FLASH_MS);
+        let gap = Duration::from_millis(ONBOARD_LED_FAIL_PATTERN_GAP_MS);
+
         while Instant::now() < end {
-            self.tick(control).await;
+            for _ in 0..2 {
+                self.set(control, true).await;
+                Timer::after(flash).await;
+                self.set(control, false).await;
+                Timer::after(flash).await;
+            }
+            Timer::after(core::cmp::min(
+                gap,
+                end.saturating_duration_since(Instant::now()),
+            ))
+            .await;
         }
+        self.set(control, false).await;
     }
 }
 
@@ -116,20 +144,36 @@ pub async fn wifi_task(stack: Stack<'static>, mut control: Control<'static>) -> 
         set_connected(false);
         led.hold_on(&mut control).await;
 
-        match control
-            .join(WIFI_SSID, JoinOptions::new(WIFI_PASSWORD.as_bytes()))
-            .await
-        {
-            Ok(()) => {
+        log::info!("wifi joining \"{}\"", WIFI_SSID);
+        let outcome = with_timeout(
+            Duration::from_secs(WIFI_JOIN_TIMEOUT_SECS),
+            control.join(WIFI_SSID, JoinOptions::new(WIFI_PASSWORD.as_bytes())),
+        )
+        .await;
+
+        match outcome {
+            Ok(Ok(())) => {
+                log::info!("wifi joined");
                 backoff = MIN_BACKOFF;
                 monitor(stack, &mut control, &mut led).await;
                 set_connected(false);
+                continue;
             }
-            Err(err) => {
+            Ok(Err(err)) => {
                 log::warn!("wifi join failed: {:?}, retrying in {:?}", err, backoff);
-                led.blink_for(&mut control, backoff).await;
-                backoff = core::cmp::min(backoff * 2, MAX_BACKOFF);
+            }
+            Err(_) => {
+                log::warn!(
+                    "wifi join timed out after {}s, retrying in {:?}",
+                    WIFI_JOIN_TIMEOUT_SECS,
+                    backoff
+                );
+                // The abandoned attempt may have left the chip half-associated.
+                control.leave().await;
             }
         }
+
+        led.failure_pattern_for(&mut control, backoff).await;
+        backoff = core::cmp::min(backoff * 2, MAX_BACKOFF);
     }
 }

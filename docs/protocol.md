@@ -12,12 +12,12 @@
 
 リクエストボディ:
 ```json
-{ "person": "alice" }
+{ "person": "grandpa" }
 ```
 
 レスポンス `200 OK`:
 ```json
-{ "status": "ok", "person": "alice", "date": "2026-08-30" }
+{ "status": "ok", "person": "grandpa", "date": "2026-08-30" }
 ```
 
 レスポンス `400 Bad Request`(`person`が未知または欠落している場合):
@@ -54,8 +54,8 @@
 ```json
 {
   "people": [
-    { "id": "alice", "pressed_today": true, "last_pressed_at": "2026-08-30T19:02:11+09:00" },
-    { "id": "bob", "pressed_today": false, "last_pressed_at": null }
+    { "id": "grandpa", "pressed_today": true, "last_pressed_at": "2026-08-30T19:02:11+09:00" },
+    { "id": "grandma", "pressed_today": false, "last_pressed_at": null }
   ],
   "occupied": false,
   "occupied_since": "2026-08-30T19:05:00+09:00"
@@ -66,7 +66,7 @@
 
 ファームウェアが定期的に行うNeoPixel同期処理で使われる、組み込み機器向けのコンパクトな状態表現(デバイス上でのJSONパースを避けるため)。`PEOPLE`の順序で1人につき1文字、`pressed_today`なら`1`、そうでなければ`0`。`Content-Type: text/plain`。
 
-レスポンス `200 OK`のボディ(5人のうちaliceとcarolが今日押した場合の例):
+レスポンス `200 OK`のボディ(5人のうちgrandpaとfatherが今日押した場合の例):
 ```
 10100
 ```

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 # Must match firmware/src/config.rs PEOPLE order/ids exactly.
-PEOPLE = ["alice", "bob", "carol", "dave", "eve"]
+PEOPLE = ["grandpa", "grandma", "father", "mother", "tamaki"]
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "data" / "bath_monitor.db"
