@@ -4,7 +4,8 @@ use embassy_time::{with_timeout, Duration};
 
 use crate::config::{BUTTON_DEBOUNCE_MS, BUTTON_LONG_PRESS_MS};
 use crate::debounce::Debouncer;
-use crate::events::{LedEvent, CANCEL_MELODY, LED_CHANNEL, MELODY_CHANNEL};
+use crate::led_pattern;
+use crate::music::{CANCEL_MELODY, MELODY_CHANNEL};
 use crate::outbox;
 
 /// One instance per button (pool_size must match `config::NUM_PEOPLE`).
@@ -42,14 +43,14 @@ pub async fn button_task(pin: Peri<'static, AnyPin>, person_idx: usize) {
             // keeps retrying, once it can). The LED and melody below must never
             // wait on anything network-related.
             outbox::mark_press(person_idx);
-            LED_CHANNEL.send(LedEvent::Pressed { person_idx }).await;
+            led_pattern::set_pressed(person_idx, true);
             MELODY_CHANNEL.send(person_idx).await;
             continue;
         }
 
         log::info!("button {} long-pressed: cancelling", person_idx);
         outbox::mark_cancel(person_idx);
-        LED_CHANNEL.send(LedEvent::Cancelled { person_idx }).await;
+        led_pattern::set_pressed(person_idx, false);
         MELODY_CHANNEL.send(CANCEL_MELODY).await;
 
         // Swallow the rest of this hold so the release isn't taken for a new press.

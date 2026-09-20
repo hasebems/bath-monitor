@@ -4,12 +4,19 @@ use embassy_time::Duration;
 
 use crate::config::OCCUPANCY_DEBOUNCE_MS;
 use crate::debounce::Debouncer;
+use crate::led_pattern;
 use crate::outbox;
 
 /// Light sensor wired to read `Level::Low` when the bath is occupied
 /// (adjust the `Level::Low` comparison below if the sensor board's polarity
 /// differs). Debounced with a longer window than buttons to reject chatter
 /// near the light threshold.
+///
+/// The NeoPixels also need the state (their "not yet pressed" pattern only
+/// shows while occupied), including the reading at boot, which the debouncer
+/// never reports since it only returns changes — so that one is sent to the
+/// LEDs right away, undebounced. It isn't recorded in the outbox: the server
+/// keeps hearing about occupancy changes only.
 #[embassy_executor::task]
 pub async fn occupancy_task(pin: Peri<'static, AnyPin>) {
     let mut debouncer = Debouncer::new(
@@ -17,10 +24,15 @@ pub async fn occupancy_task(pin: Peri<'static, AnyPin>) {
         Duration::from_millis(OCCUPANCY_DEBOUNCE_MS),
     );
 
+    let occupied = debouncer.level() == Level::Low;
+    log::info!("occupancy at boot: occupied={}", occupied);
+    led_pattern::set_occupied(occupied);
+
     loop {
         let level = debouncer.debounce().await;
         let occupied = level == Level::Low;
         log::info!("occupancy changed: occupied={}", occupied);
+        led_pattern::set_occupied(occupied);
         outbox::set_occupancy(occupied);
     }
 }

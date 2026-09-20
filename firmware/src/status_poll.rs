@@ -9,7 +9,7 @@ use reqwless::client::HttpClient;
 use reqwless::request::Method;
 
 use crate::config::{LED_SYNC_INTERVAL_SECS, NUM_PEOPLE, SERVER_REQUEST_TIMEOUT_SECS};
-use crate::events::{LedEvent, LED_CHANNEL};
+use crate::led_pattern;
 use crate::outbox;
 use crate::secrets::SERVER_BASE_URL;
 use crate::wifi;
@@ -58,7 +58,7 @@ pub async fn status_poll_task(stack: Stack<'static>) {
                             *slot = intent;
                         }
                     }
-                    LED_CHANNEL.send(LedEvent::Sync { pressed }).await;
+                    led_pattern::set_all_pressed(pressed);
                 }
                 Ok(None) => {}
                 Err(_) => log::warn!("led-state poll: timed out"),

@@ -1,6 +1,6 @@
 //! The "music-data playback module" from `docs/additional_spec.md`: holds
 //! the 5 fixed melodies (one per `config::PEOPLE` entry) and, once
-//! triggered by an event on `events::MELODY_CHANNEL`, schedules their note
+//! triggered by a message on `MELODY_CHANNEL`, schedules their note
 //! events and dispatches them as `waveform::NoteOn` messages, alternating
 //! between `waveform::SLOT_CHANNELS[0]` and `[1]`.
 //!
@@ -8,11 +8,24 @@
 //! of the waveform output module's per-chunk pacing — this task only cares
 //! about wall-clock time, at `config::AUDIO_TIME_UNIT_MS` resolution.
 
+use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use embassy_sync::channel::Channel;
 use embassy_time::{with_timeout, Duration, Instant};
 
 use crate::config::{AUDIO_TIME_UNIT_MS, NUM_PEOPLE};
-use crate::events::MELODY_CHANNEL;
 use crate::waveform::{NoteOn, SLOT_CHANNELS};
+
+/// Which melody to (re)start playing: an index into `MUSIC_DATA` — one per
+/// `config::PEOPLE` entry, plus `CANCEL_MELODY` (see
+/// `docs/additional_spec.md`).
+/// Sent from CORE0's button tasks to this CORE1 task — the one channel that
+/// crosses cores. (Neither the NeoPixel state nor data bound for the server
+/// goes over a channel: see `led_pattern.rs` and `outbox.rs`.)
+pub static MELODY_CHANNEL: Channel<CriticalSectionRawMutex, usize, 8> = Channel::new();
+
+/// `MELODY_CHANNEL` value for the "press cancelled" sound, one past the
+/// per-person melodies.
+pub const CANCEL_MELODY: usize = NUM_PEOPLE;
 
 /// One entry in a music data table, exactly as described in
 /// `docs/additional_spec.md`: `time`/`duration` are in `AUDIO_TIME_UNIT_MS`
@@ -70,7 +83,7 @@ static MELODY_4: &[NoteEvent] = &[
 static MELODY_CANCEL: &[NoteEvent] = &[note(0, 55, 100, 15), note(20, 48, 100, 40)];
 
 /// Indexed by person_idx (0-4), matching `config::PEOPLE`, then
-/// `events::CANCEL_MELODY` — the values sent on `MELODY_CHANNEL`.
+/// `CANCEL_MELODY` — the values sent on `MELODY_CHANNEL`.
 static MUSIC_DATA: [&[NoteEvent]; NUM_PEOPLE + 1] = [
     MELODY_0,
     MELODY_1,

@@ -5,7 +5,6 @@ mod audio;
 mod buttons;
 mod config;
 mod debounce;
-mod events;
 mod http_client;
 mod irqs;
 mod led;
