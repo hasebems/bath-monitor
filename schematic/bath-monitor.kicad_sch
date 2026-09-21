@@ -6,8 +6,983 @@
 	(paper "A3")
 	(title_block
 		(title "Bath Monitor")
+		(date "2026-09-20")
+		(rev "1")
 	)
 	(lib_symbols
+		(symbol "+3V3_1"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "+3V3"
+				(at 0 3.556 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+3V3\""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "+3V3_1_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+3V3_1_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "+3V3_2"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "+3V3"
+				(at 0 3.556 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+3V3\""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "+3V3_2_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+3V3_2_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "+3V3_3"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "+3V3"
+				(at 0 3.556 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+3V3\""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "+3V3_3_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+3V3_3_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "+3V3_4"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "+3V3"
+				(at 0 3.556 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+3V3\""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "+3V3_4_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+3V3_4_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "+3V3_5"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "+3V3"
+				(at 0 3.556 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+3V3\""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "+3V3_5_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+3V3_5_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "+3V3_6"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "+3V3"
+				(at 0 3.556 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+3V3\""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "+3V3_6_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+3V3_6_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "+3V3_7"
+			(power global)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "+3V3"
+				(at 0 3.556 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+3V3\""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "+3V3_7_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+3V3_7_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(name ""
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "74xGxx:74AHCT1G125"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -2451,145 +3426,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "power:+3.3V"
-			(power global)
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "#PWR"
-				(at 0 -3.81 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "+3.3V"
-				(at 0 3.556 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "global power"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "+3.3V_0_1"
-				(polyline
-					(pts
-						(xy -0.762 1.27) (xy 0 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 2.54) (xy 0.762 1.27)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 0 0) (xy 0 2.54)
-					)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "+3.3V_1_1"
-				(pin power_in line
-					(at 0 0 90)
-					(length 0)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "power:+3V3"
 			(power global)
 			(pin_numbers
@@ -2605,7 +3441,7 @@
 			(in_pos_files yes)
 			(duplicate_pin_numbers_are_jumpers no)
 			(property "Reference" "#PWR"
-				(at 0 3.556 0)
+				(at 0 -3.81 0)
 				(show_name no)
 				(do_not_autoplace no)
 				(hide yes)
@@ -2647,7 +3483,18 @@
 					)
 				)
 			)
-			(property "Description" ""
+			(property "Description" "Power symbol creates a global label with name \"+3V3\""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "ki_keywords" "global power"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2661,7 +3508,7 @@
 			(symbol "+3V3_0_1"
 				(polyline
 					(pts
-						(xy 0 1.27) (xy 0.635 0.635)
+						(xy -0.762 1.27) (xy 0 2.54)
 					)
 					(stroke
 						(width 0)
@@ -2673,7 +3520,19 @@
 				)
 				(polyline
 					(pts
-						(xy 0 0) (xy 0 1.27) (xy -0.635 0.635)
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
 					)
 					(stroke
 						(width 0)
@@ -2685,10 +3544,10 @@
 				)
 			)
 			(symbol "+3V3_1_1"
-				(pin power_out line
+				(pin power_in line
 					(at 0 0 90)
 					(length 0)
-					(name "+3V3"
+					(name ""
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -3286,6 +4145,16 @@
 	)
 	(wire
 		(pts
+			(xy 208.28 100.33) (xy 214.63 100.33)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "13d93da4-da95-4ab0-bd73-35de5f6d00cf")
+	)
+	(wire
+		(pts
 			(xy 57.17 58.42) (xy 54.63 58.42)
 		)
 		(stroke
@@ -3793,16 +4662,6 @@
 			(type default)
 		)
 		(uuid "91b40ff3-999b-482b-98e0-ff034bae8123")
-	)
-	(wire
-		(pts
-			(xy 215.9 100.33) (xy 214.63 100.33)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "92472524-87aa-45e8-a9cd-768ee219818f")
 	)
 	(wire
 		(pts
@@ -11704,7 +12563,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "03e98d07-0343-41b7-b043-6df88e2ec7f7")
-		(property "Reference" "#PWR024"
+		(property "Reference" "#PWR015"
 			(at 242.57 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -11763,7 +12622,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR024")
+					(reference "#PWR015")
 					(unit 1)
 				)
 			)
@@ -11781,7 +12640,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "04537ddb-e47f-428c-a08b-d15815eb25d1")
-		(property "Reference" "#PWR038"
+		(property "Reference" "#PWR010"
 			(at 322.58 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -11840,7 +12699,165 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR038")
+					(reference "#PWR010")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_7")
+		(lib_id "power:+3V3")
+		(at 106.68 96.52 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "0a745b61-d2ae-4f4f-9054-4e487683d13a")
+		(property "Reference" "#PWR026"
+			(at 106.68 100.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 106.68 91.44 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 106.68 96.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 106.68 96.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 106.68 96.52 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "9aedc39c-264c-4342-b991-0ab1e4f92142")
+		)
+		(instances
+			(project "bath-monitor"
+				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
+					(reference "#PWR026")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_4")
+		(lib_id "power:+3V3")
+		(at 130.81 50.8 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "10108efd-e5da-4262-9d30-c14c4b7f0d8c")
+		(property "Reference" "#PWR011"
+			(at 130.81 54.61 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 130.81 45.72 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 130.81 50.8 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 130.81 50.8 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 130.81 50.8 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "db29ccae-b843-40cd-87a6-74d088b06b0b")
+		)
+		(instances
+			(project "bath-monitor"
+				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
+					(reference "#PWR011")
 					(unit 1)
 				)
 			)
@@ -11925,6 +12942,85 @@
 		)
 	)
 	(symbol
+		(lib_name "+3V3_3")
+		(lib_id "power:+3V3")
+		(at 73.66 149.86 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "2b36407d-fd11-4e06-91a6-a185982ff5e4")
+		(property "Reference" "#PWR037"
+			(at 73.66 153.67 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 73.66 144.78 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 73.66 149.86 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 73.66 149.86 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 73.66 149.86 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "49e8204e-bf6a-453b-b7d9-4065b48cb4cb")
+		)
+		(instances
+			(project "bath-monitor"
+				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
+					(reference "#PWR037")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GND")
 		(at 250.19 49.53 0)
 		(unit 1)
@@ -11936,7 +13032,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "313f0440-e3ad-474d-8dda-bb9261c2d966")
-		(property "Reference" "#PWR026"
+		(property "Reference" "#PWR07"
 			(at 250.19 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -11995,7 +13091,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR026")
+					(reference "#PWR07")
 					(unit 1)
 				)
 			)
@@ -12013,7 +13109,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "37b1ba0b-8072-4d60-b788-c0d4a5765790")
-		(property "Reference" "#PWR034"
+		(property "Reference" "#PWR017"
 			(at 290.83 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -12072,7 +13168,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR034")
+					(reference "#PWR017")
 					(unit 1)
 				)
 			)
@@ -12090,7 +13186,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3abb1ed0-17d2-47df-8cfd-4202dc24968d")
-		(property "Reference" "#PWR030"
+		(property "Reference" "#PWR08"
 			(at 274.32 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -12149,7 +13245,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR030")
+					(reference "#PWR08")
 					(unit 1)
 				)
 			)
@@ -12166,7 +13262,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "3acb5c56-d0de-49e4-adf1-14e681bc65d6")
-		(property "Reference" "J2"
+		(property "Reference" "J1"
 			(at 286.004 121.412 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12188,7 +13284,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x07_P2.54mm_Vertical"
 			(at 287.02 132.08 0)
 			(hide yes)
 			(show_name no)
@@ -12245,7 +13341,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "J2")
+					(reference "J1")
 					(unit 1)
 				)
 			)
@@ -12263,7 +13359,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "3af35eae-cf8b-4703-bc9a-9956a95f6be7")
-		(property "Reference" "#PWR027"
+		(property "Reference" "#PWR03"
 			(at 266.7 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -12323,7 +13419,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR027")
+					(reference "#PWR03")
 					(unit 1)
 				)
 			)
@@ -12341,7 +13437,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4444f12c-536d-4da3-ac5c-3fc2bef9d6d3")
-		(property "Reference" "R1"
+		(property "Reference" "R5"
 			(at 101.6 109.2199 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12363,7 +13459,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
 			(at 97.282 110.49 90)
 			(hide yes)
 			(show_name no)
@@ -12405,7 +13501,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "R1")
+					(reference "R5")
 					(unit 1)
 				)
 			)
@@ -12423,7 +13519,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "46878758-64c0-4c7d-b69d-eb9e23c0d365")
-		(property "Reference" "C5"
+		(property "Reference" "C4"
 			(at 300.99 45.7262 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12434,7 +13530,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "C_Small"
+		(property "Value" "0.1"
 			(at 300.99 48.2662 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12445,7 +13541,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 298.45 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -12487,7 +13583,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "C5")
+					(reference "C4")
 					(unit 1)
 				)
 			)
@@ -12505,7 +13601,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "46cf970a-a007-4d07-9f73-9e7acffa7782")
-		(property "Reference" "#PWR014"
+		(property "Reference" "#PWR024"
 			(at 166.37 95.25 0)
 			(hide yes)
 			(show_name no)
@@ -12565,7 +13661,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR014")
+					(reference "#PWR024")
 					(unit 1)
 				)
 			)
@@ -12583,7 +13679,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "470c68d8-a204-46a4-a6db-74f401410c54")
-		(property "Reference" "#PWR02"
+		(property "Reference" "#PWR019"
 			(at 54.63 71.12 0)
 			(hide yes)
 			(show_name no)
@@ -12642,7 +13738,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR02")
+					(reference "#PWR019")
 					(unit 1)
 				)
 			)
@@ -12660,7 +13756,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4d73b8f1-7f8d-455e-9c8e-6a79da533a9c")
-		(property "Reference" "R4"
+		(property "Reference" "R2"
 			(at 124.46 68.5799 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12682,7 +13778,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
 			(at 120.142 69.85 90)
 			(hide yes)
 			(show_name no)
@@ -12724,7 +13820,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "R4")
+					(reference "R2")
 					(unit 1)
 				)
 			)
@@ -12742,7 +13838,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "4e74f03b-cdb0-4067-83ab-c3dc8a74dae6")
-		(property "Reference" "#PWR020"
+		(property "Reference" "#PWR06"
 			(at 226.06 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -12801,7 +13897,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR020")
+					(reference "#PWR06")
 					(unit 1)
 				)
 			)
@@ -12819,7 +13915,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "57b9b9f6-293d-4744-8855-8128faf0f911")
-		(property "Reference" "J1"
+		(property "Reference" "J2"
 			(at 63.5 154.9399 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -12841,7 +13937,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical"
 			(at 66.04 154.94 0)
 			(hide yes)
 			(show_name no)
@@ -12889,7 +13985,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "J1")
+					(reference "J2")
 					(unit 1)
 				)
 			)
@@ -12907,7 +14003,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "58bf95bb-dc8b-48fb-9ea8-21f75b04a8f1")
-		(property "Reference" "#PWR017"
+		(property "Reference" "#PWR01"
 			(at 219.71 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -12967,7 +14063,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR017")
+					(reference "#PWR01")
 					(unit 1)
 				)
 			)
@@ -12985,7 +14081,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5b8b582e-6d9a-48f9-a2ea-2663bb4a6cc6")
-		(property "Reference" "#PWR019"
+		(property "Reference" "#PWR023"
 			(at 223.52 96.52 0)
 			(hide yes)
 			(show_name no)
@@ -13045,7 +14141,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR019")
+					(reference "#PWR023")
 					(unit 1)
 				)
 			)
@@ -13152,7 +14248,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5cfb917c-7aba-4e93-90f9-667f6210b931")
-		(property "Reference" "#PWR032"
+		(property "Reference" "#PWR034"
 			(at 280.67 148.59 0)
 			(hide yes)
 			(show_name no)
@@ -13212,7 +14308,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR032")
+					(reference "#PWR034")
 					(unit 1)
 				)
 			)
@@ -13307,8 +14403,9 @@
 		)
 	)
 	(symbol
+		(lib_name "+3V3_5")
 		(lib_id "power:+3V3")
-		(at 114.3 81.28 0)
+		(at 121.92 66.04 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -13317,9 +14414,9 @@
 		(in_pos_files yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "5ee183f4-0ad7-47a2-bad6-d4c89ce4ee97")
-		(property "Reference" "#PWR010"
-			(at 114.3 78.74 0)
+		(uuid "60371331-1afc-4134-8e89-ac448e61328b")
+		(property "Reference" "#PWR013"
+			(at 121.92 69.85 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13330,7 +14427,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 114.3 78.74 0)
+			(at 121.92 60.96 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -13340,7 +14437,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 114.3 81.28 0)
+			(at 121.92 66.04 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13351,7 +14448,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 114.3 81.28 0)
+			(at 121.92 66.04 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13361,8 +14458,9 @@
 				)
 			)
 		)
-		(property "Description" ""
-			(at 114.3 81.28 0)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 121.92 66.04 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -13372,12 +14470,12 @@
 			)
 		)
 		(pin "1"
-			(uuid "d3602e13-5112-4271-8656-47adc09e9156")
+			(uuid "f373e62a-30fa-4e0d-b5e3-73c5317f37da")
 		)
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR010")
+					(reference "#PWR013")
 					(unit 1)
 				)
 			)
@@ -13462,6 +14560,85 @@
 		)
 	)
 	(symbol
+		(lib_name "+3V3_2")
+		(lib_id "power:+3V3")
+		(at 267.97 121.92 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "657570a4-b48b-44a0-adda-bc100d20f77b")
+		(property "Reference" "#PWR033"
+			(at 267.97 125.73 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 267.97 116.84 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 267.97 121.92 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 267.97 121.92 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 267.97 121.92 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "1621f08f-3ec1-4a67-b0e6-45ee80bacbd8")
+		)
+		(instances
+			(project "bath-monitor"
+				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
+					(reference "#PWR033")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Local:SW_Push")
 		(at 60.98 88.9 0)
 		(unit 1)
@@ -13493,7 +14670,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Button_Switch_THT:SW_PUSH-12mm"
 			(at 60.98 88.9 0)
 			(hide yes)
 			(show_name no)
@@ -13552,7 +14729,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "70f26838-9153-4acb-941f-305826e8148a")
-		(property "Reference" "C4"
+		(property "Reference" "C3"
 			(at 276.86 45.7262 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13563,7 +14740,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "C_Small"
+		(property "Value" "0.1"
 			(at 276.86 48.2662 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13574,7 +14751,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 274.32 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -13616,7 +14793,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "C4")
+					(reference "C3")
 					(unit 1)
 				)
 			)
@@ -13634,7 +14811,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "71b00592-46b7-4d53-a5f2-54b9f08a1a82")
-		(property "Reference" "C2"
+		(property "Reference" "C6"
 			(at 246.38 88.9062 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13698,7 +14875,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "C2")
+					(reference "C6")
 					(unit 1)
 				)
 			)
@@ -13716,7 +14893,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "71b46269-d5af-4c00-b548-1aa4f5af0b88")
-		(property "Reference" "#PWR036"
+		(property "Reference" "#PWR05"
 			(at 314.96 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -13776,7 +14953,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR036")
+					(reference "#PWR05")
 					(unit 1)
 				)
 			)
@@ -13794,7 +14971,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "722454d9-0fe5-454b-b4d5-10fca2c62129")
-		(property "Reference" "R5"
+		(property "Reference" "R1"
 			(at 133.35 53.3399 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13816,7 +14993,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
 			(at 129.032 54.61 90)
 			(hide yes)
 			(show_name no)
@@ -13858,7 +15035,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "R5")
+					(reference "R1")
 					(unit 1)
 				)
 			)
@@ -13896,7 +15073,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Button_Switch_THT:SW_PUSH-12mm"
 			(at 60.98 104.14 0)
 			(hide yes)
 			(show_name no)
@@ -13977,7 +15154,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
 			(at 112.522 85.09 90)
 			(hide yes)
 			(show_name no)
@@ -14037,7 +15214,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "82ebc76c-4b82-49c4-b427-fa2fcd78b175")
-		(property "Reference" "#PWR031"
+		(property "Reference" "#PWR032"
 			(at 276.86 124.46 0)
 			(hide yes)
 			(show_name no)
@@ -14097,7 +15274,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR031")
+					(reference "#PWR032")
 					(unit 1)
 				)
 			)
@@ -14192,8 +15369,9 @@
 		)
 	)
 	(symbol
+		(lib_name "+3V3_6")
 		(lib_id "power:+3V3")
-		(at 99.06 106.68 0)
+		(at 114.3 81.28 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -14202,9 +15380,9 @@
 		(in_pos_files yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "89c89a7b-b4d2-4b8d-9291-cb16b8d9eafa")
-		(property "Reference" "#PWR08"
-			(at 99.06 104.14 0)
+		(uuid "91447186-14f0-420e-ba47-70d6120503d4")
+		(property "Reference" "#PWR020"
+			(at 114.3 85.09 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14215,7 +15393,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 99.06 104.14 0)
+			(at 114.3 76.2 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -14225,7 +15403,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 99.06 106.68 0)
+			(at 114.3 81.28 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14236,7 +15414,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 99.06 106.68 0)
+			(at 114.3 81.28 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14246,8 +15424,9 @@
 				)
 			)
 		)
-		(property "Description" ""
-			(at 99.06 106.68 0)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 114.3 81.28 0)
+			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -14257,12 +15436,12 @@
 			)
 		)
 		(pin "1"
-			(uuid "042b21c4-98bc-4450-bb34-d2b3c2bba3fc")
+			(uuid "51b59d73-03bd-4ba1-ab66-82e710d5008c")
 		)
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR08")
+					(reference "#PWR020")
 					(unit 1)
 				)
 			)
@@ -14280,7 +15459,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "94bafa28-1254-4b44-a911-adce1bc9014d")
-		(property "Reference" "U2"
+		(property "Reference" "U1"
 			(at 214.63 93.9098 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14351,161 +15530,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "U2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+3V3")
-		(at 73.66 149.86 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "968541a8-65b0-4d05-a53c-3f520831f040")
-		(property "Reference" "#PWR06"
-			(at 73.66 147.32 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+3V3"
-			(at 73.66 147.32 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 73.66 149.86 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 73.66 149.86 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 73.66 149.86 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "7c940dca-b82a-4282-b6f4-402fca81d4ec")
-		)
-		(instances
-			(project "bath-monitor"
-				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR06")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+3V3")
-		(at 121.92 66.04 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "99fb25ef-1d5f-453f-9d04-c4ac08b28af5")
-		(property "Reference" "#PWR011"
-			(at 121.92 63.5 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+3V3"
-			(at 121.92 63.5 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 121.92 66.04 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 121.92 66.04 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 121.92 66.04 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "b06595d0-8da5-4ea0-92f8-f936765e2f6d")
-		)
-		(instances
-			(project "bath-monitor"
-				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR011")
+					(reference "U1")
 					(unit 1)
 				)
 			)
@@ -14523,7 +15548,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9f1d05a2-ae36-40ec-a6e5-594f50c9f317")
-		(property "Reference" "#PWR04"
+		(property "Reference" "#PWR028"
 			(at 54.63 101.6 0)
 			(hide yes)
 			(show_name no)
@@ -14582,7 +15607,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR04")
+					(reference "#PWR028")
 					(unit 1)
 				)
 			)
@@ -14600,7 +15625,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "a1245bac-a827-4780-9459-5f0710160b0c")
-		(property "Reference" "C6"
+		(property "Reference" "C5"
 			(at 325.12 45.7262 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14611,7 +15636,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "C_Small"
+		(property "Value" "0.1"
 			(at 325.12 48.2662 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14622,7 +15647,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 322.58 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -14664,7 +15689,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "C6")
+					(reference "C5")
 					(unit 1)
 				)
 			)
@@ -14702,7 +15727,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Button_Switch_THT:SW_PUSH-12mm"
 			(at 60.98 73.66 0)
 			(hide yes)
 			(show_name no)
@@ -14761,7 +15786,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "abfc4486-2f31-4873-9375-291f035f80b7")
-		(property "Reference" "#PWR028"
+		(property "Reference" "#PWR016"
 			(at 266.7 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -14820,7 +15845,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR028")
+					(reference "#PWR016")
 					(unit 1)
 				)
 			)
@@ -14858,7 +15883,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Button_Switch_THT:SW_PUSH-12mm"
 			(at 60.98 119.38 0)
 			(hide yes)
 			(show_name no)
@@ -14917,7 +15942,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "af9864ab-bedc-413a-ba96-f53fd3ea679d")
-		(property "Reference" "#PWR035"
+		(property "Reference" "#PWR09"
 			(at 298.45 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -14976,7 +16001,86 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR035")
+					(reference "#PWR09")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_1")
+		(lib_id "power:+3V3")
+		(at 172.72 100.33 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "b00bd12a-ce01-407f-be44-e5bf229e7681")
+		(property "Reference" "#PWR027"
+			(at 172.72 104.14 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 172.72 95.25 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 172.72 100.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 172.72 100.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 172.72 100.33 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "1a6e7d15-170d-4eb5-88de-7af8528f58d2")
+		)
+		(instances
+			(project "bath-monitor"
+				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
+					(reference "#PWR027")
 					(unit 1)
 				)
 			)
@@ -15005,7 +16109,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "C_Small"
+		(property "Value" "0.1"
 			(at 228.6 48.2662 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15016,7 +16120,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 226.06 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -15076,7 +16180,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "c1ea092c-2f5c-4402-9d2e-76664d9c8fcc")
-		(property "Reference" "#PWR018"
+		(property "Reference" "#PWR014"
 			(at 219.71 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -15135,7 +16239,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR018")
+					(reference "#PWR014")
 					(unit 1)
 				)
 			)
@@ -15230,83 +16334,6 @@
 		)
 	)
 	(symbol
-		(lib_id "power:+3V3")
-		(at 130.81 50.8 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "c4ad99dd-7c58-4d4f-8ece-5152db91db79")
-		(property "Reference" "#PWR012"
-			(at 130.81 48.26 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+3V3"
-			(at 130.81 48.26 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 130.81 50.8 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 130.81 50.8 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 130.81 50.8 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "97d3ef89-3fe0-4ffb-a091-d39c54978864")
-		)
-		(instances
-			(project "bath-monitor"
-				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR012")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Device:C_Small")
 		(at 250.19 46.99 0)
 		(unit 1)
@@ -15318,7 +16345,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "c71bfbdf-4de8-49b3-9ecc-94b7516e08df")
-		(property "Reference" "C3"
+		(property "Reference" "C2"
 			(at 252.73 45.7262 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15329,7 +16356,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "C_Small"
+		(property "Value" "0.1"
 			(at 252.73 48.2662 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15340,7 +16367,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 250.19 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -15382,7 +16409,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "C3")
+					(reference "C2")
 					(unit 1)
 				)
 			)
@@ -15400,7 +16427,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "c732a0dc-6a97-455c-b096-bad1c6ec4f27")
-		(property "Reference" "#PWR037"
+		(property "Reference" "#PWR018"
 			(at 314.96 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -15459,87 +16486,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR037")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
-		(at 212.09 100.33 270)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "caa29df5-b0ae-46f1-831d-2808ffa4ae5f")
-		(property "Reference" "R6"
-			(at 212.09 93.98 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "220"
-			(at 212.09 96.52 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
-			(at 212.09 98.552 90)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 212.09 100.33 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Resistor"
-			(at 212.09 100.33 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "8df43dae-df4e-4b68-8749-de7779d673b1")
-		)
-		(pin "2"
-			(uuid "5381b713-6fdc-498a-82aa-4e9ab81b3cdf")
-		)
-		(instances
-			(project "bath-monitor"
-				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "R6")
+					(reference "#PWR018")
 					(unit 1)
 				)
 			)
@@ -15557,7 +16504,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "caf01ba7-3699-4ee1-8978-b7a0b94371a1")
-		(property "Reference" "#PWR033"
+		(property "Reference" "#PWR04"
 			(at 290.83 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -15617,7 +16564,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR033")
+					(reference "#PWR04")
 					(unit 1)
 				)
 			)
@@ -15635,7 +16582,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d0cd002a-e8db-4b3c-829c-e9d2e72efd1a")
-		(property "Reference" "#PWR022"
+		(property "Reference" "#PWR030"
 			(at 232.41 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -15695,7 +16642,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR022")
+					(reference "#PWR030")
 					(unit 1)
 				)
 			)
@@ -15713,7 +16660,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "d37d7b90-b633-4c63-872d-d1903708bca9")
-		(property "Reference" "#PWR023"
+		(property "Reference" "#PWR02"
 			(at 242.57 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -15773,7 +16720,85 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR023")
+					(reference "#PWR02")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 99.06 106.68 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d71b05f4-6c1c-4628-b1df-873b98f4cf8d")
+		(property "Reference" "#PWR029"
+			(at 99.06 110.49 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 99.06 101.6 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 99.06 106.68 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 99.06 106.68 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+3V3\""
+			(at 99.06 106.68 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "13463df4-af76-47d6-bd5e-86c36b900ff5")
+		)
+		(instances
+			(project "bath-monitor"
+				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
+					(reference "#PWR029")
 					(unit 1)
 				)
 			)
@@ -15791,7 +16816,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "db4a4bde-f7c7-49d3-8c8e-ed0aaed6255f")
-		(property "Reference" "U1"
+		(property "Reference" "U2"
 			(at 149.86 110.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15811,7 +16836,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Module:RaspberryPi_Pico_Common_THT"
 			(at 149.86 118.11 0)
 			(hide yes)
 			(show_name no)
@@ -15966,7 +16991,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "U1")
+					(reference "U2")
 					(unit 1)
 				)
 			)
@@ -15984,7 +17009,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e132493e-81a8-4852-a72d-8374ab7f22ec")
-		(property "Reference" "#PWR013"
+		(property "Reference" "#PWR035"
 			(at 134.62 142.24 0)
 			(hide yes)
 			(show_name no)
@@ -16043,7 +17068,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR013")
+					(reference "#PWR035")
 					(unit 1)
 				)
 			)
@@ -16061,7 +17086,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e17932a9-96c3-4e8f-bbb8-99c1ca32012c")
-		(property "Reference" "#PWR07"
+		(property "Reference" "#PWR038"
 			(at 73.66 161.29 0)
 			(hide yes)
 			(show_name no)
@@ -16120,7 +17145,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR07")
+					(reference "#PWR038")
 					(unit 1)
 				)
 			)
@@ -16139,7 +17164,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "e307d65c-1c80-4ce2-9438-59edfc1b3208")
-		(property "Reference" "#PWR015"
+		(property "Reference" "#PWR036"
 			(at 166.37 151.13 0)
 			(hide yes)
 			(show_name no)
@@ -16199,84 +17224,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR015")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+3V3")
-		(at 106.68 96.52 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "e8455e77-ebb7-4622-9342-3c81bb387855")
-		(property "Reference" "#PWR09"
-			(at 106.68 93.98 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+3V3"
-			(at 106.68 93.98 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 106.68 96.52 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 106.68 96.52 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 106.68 96.52 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "9ce81004-690a-41c4-bc00-d934f420df78")
-		)
-		(instances
-			(project "bath-monitor"
-				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR09")
+					(reference "#PWR036")
 					(unit 1)
 				)
 			)
@@ -16294,7 +17242,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "eb0821e0-ee26-45c6-a719-064b903424d6")
-		(property "Reference" "#PWR01"
+		(property "Reference" "#PWR012"
 			(at 54.63 55.88 0)
 			(hide yes)
 			(show_name no)
@@ -16353,85 +17301,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR01")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+3.3V")
-		(at 267.97 121.92 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "ec8b7142-a91b-4385-a049-f2ade6baeb47")
-		(property "Reference" "#PWR029"
-			(at 267.97 125.73 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+3.3V"
-			(at 267.97 116.84 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 267.97 121.92 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 267.97 121.92 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 267.97 121.92 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "0fb4bbae-7ae0-46b4-baec-98bb328a2896")
-		)
-		(instances
-			(project "bath-monitor"
-				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR029")
+					(reference "#PWR012")
 					(unit 1)
 				)
 			)
@@ -16449,7 +17319,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "f8b1d705-592a-4886-a6c2-918242f2b2a5")
-		(property "Reference" "R2"
+		(property "Reference" "R4"
 			(at 109.22 99.0599 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -16471,7 +17341,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
 			(at 104.902 100.33 90)
 			(hide yes)
 			(show_name no)
@@ -16513,84 +17383,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "R2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+3V3")
-		(at 172.72 100.33 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "fb54e6b0-8b35-4540-8472-817b435de030")
-		(property "Reference" "#PWR016"
-			(at 172.72 97.79 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "+3V3"
-			(at 172.72 97.79 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 172.72 100.33 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 172.72 100.33 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" ""
-			(at 172.72 100.33 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "6daa63e7-7559-4775-8c0f-820d6115c701")
-		)
-		(instances
-			(project "bath-monitor"
-				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR016")
+					(reference "R4")
 					(unit 1)
 				)
 			)
@@ -16608,7 +17401,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "fdcd84a6-6554-4ef5-b594-9b069a74392f")
-		(property "Reference" "#PWR05"
+		(property "Reference" "#PWR031"
 			(at 54.63 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -16667,7 +17460,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR05")
+					(reference "#PWR031")
 					(unit 1)
 				)
 			)
@@ -16685,7 +17478,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "fdf5bb21-670b-4178-9e25-4fc8d4726760")
-		(property "Reference" "#PWR03"
+		(property "Reference" "#PWR022"
 			(at 54.63 86.36 0)
 			(hide yes)
 			(show_name no)
@@ -16744,7 +17537,7 @@
 		(instances
 			(project "bath-monitor"
 				(path "/9c2d89bc-5949-401d-94f9-9d8aa9cf7f0b"
-					(reference "#PWR03")
+					(reference "#PWR022")
 					(unit 1)
 				)
 			)
@@ -16782,7 +17575,7 @@
 				)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Button_Switch_THT:SW_PUSH-12mm"
 			(at 60.98 58.42 0)
 			(hide yes)
 			(show_name no)
