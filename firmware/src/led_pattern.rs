@@ -84,12 +84,12 @@ const PRESSED_COLORS: [RGB8; NUM_PEOPLE] = [
 /// white: one full dark → bright → dark cycle takes this long.
 const BREATH_PERIOD_MS: u64 = 6000;
 /// Brightest value of each channel at the top of the breath.
-const BREATH_PEAK: u32 = 40;
+const BREATH_PEAK: u32 = 16;
 /// How much later each LED's breath runs than the previous one's (in chain
 /// order), so the light appears to travel along the chain from LED 0 towards
 /// the last one. 0 makes all LEDs breathe in step; to flow the other way
 /// round, index the LEDs from the end in `render`.
-const BREATH_PHASE_STEP_MS: u64 = 600;
+const BREATH_PHASE_STEP_MS: u64 = 1000;
 // The whole chain's delay must stay within one period (`render` relies on it
 // to keep its subtraction from underflowing).
 const _: () = assert!((NUM_PEOPLE as u64 - 1) * BREATH_PHASE_STEP_MS <= BREATH_PERIOD_MS);
