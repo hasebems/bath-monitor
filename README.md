@@ -42,6 +42,9 @@ cargo run --release       # ビルドし、BOOTSELモードのPico 2 Wにpicotoo
 
 ログはUSBシリアル経由(`screen /dev/tty.usbmodemXXXX 115200`)で確認します(RTT/defmtではありません)。
 
+- `XXXX`の部分: Pico 2 WをUSB接続した状態で`ls /dev/tty.usbmodem*`を実行すると確認できる(複数のUSBシリアルデバイスが繋がっている場合は、抜き差し前後で`ls`の差分を見ると確実)
+- `screen`の終了方法: `Ctrl-a`の後に`k`を押し、確認プロンプトで`y`を押す(`Ctrl-a` `d`はデタッチのみでプロセスは残るため注意)
+
 ## 現在の状況
 
 - サーバーは実機のRaspberry Pi 4上にデプロイ・動作確認済み(ダッシュボードに自宅LAN上のスマートフォンからアクセスできることを確認済み)
