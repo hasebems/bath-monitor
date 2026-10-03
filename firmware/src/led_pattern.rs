@@ -1,5 +1,5 @@
 //! Everything about what the NeoPixels show, kept apart from how they're
-//! driven (`led.rs`'s WS2812 output and fixed-rate frame loop, which only
+//! driven (`led.rs`'s SK6812RGBW output and fixed-rate frame loop, which only
 //! writes the colors this module hands it): the state that decides the look
 //! (who has pressed, whether the bath is occupied) and the look itself
 //! (`render`, a pure function of that state and the time, so it needs no
@@ -15,7 +15,7 @@ use core::cell::Cell;
 
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::blocking_mutex::Mutex;
-use smart_leds::RGB8;
+use smart_leds::{White, RGBW};
 
 use crate::config::NUM_PEOPLE;
 
@@ -63,36 +63,38 @@ pub fn set_occupied(occupied: bool) {
 /// The colors to write for the frame at `now_ms` (any monotonic clock in
 /// milliseconds), one per person in `config::PEOPLE` order, from the state as
 /// it is right now, so a change shows up in the very next frame.
-pub fn frame(now_ms: u64) -> [RGB8; NUM_PEOPLE] {
+pub fn frame(now_ms: u64) -> [RGBW<u8>; NUM_PEOPLE] {
     let state = STATE.lock(|cell| cell.get());
     render(&state.pressed, state.occupied, now_ms)
 }
 
+/// One SK6812RGBW pixel: the red, green and blue LEDs plus the separate
+/// white LED (`w`).
+const fn rgbw(r: u8, g: u8, b: u8, w: u8) -> RGBW<u8> {
+    RGBW { r, g, b, a: White(w) }
+}
+
+const OFF: RGBW<u8> = rgbw(0, 0, 0, 0);
+
 /// The color each person lights up in once they've pressed today, in
 /// `config::PEOPLE` order (grandpa, grandma, father, mother, son). Kept dim
 /// to limit current draw across 5 LEDs on a single 5V rail, and none is
-/// whitish so it can't be mistaken for the "not yet" breathing below.
-const PRESSED_COLORS: [RGB8; NUM_PEOPLE] = [
-    RGB8::new(0, 0, 48),  // grandpa: blue
-    RGB8::new(40, 0, 20), // grandma: pink
-    RGB8::new(0, 40, 0),  // father: green
-    RGB8::new(48, 16, 0), // mother: orange
-    RGB8::new(40, 28, 0), // son: yellow
+/// whitish (the white LED stays off) so it can't be mistaken for the "not
+/// yet" breathing below.
+const PRESSED_COLORS: [RGBW<u8>; NUM_PEOPLE] = [
+    rgbw(0, 0, 48, 0),  // grandpa: blue
+    rgbw(40, 0, 20, 0), // grandma: pink
+    rgbw(0, 40, 0, 0),  // father: green
+    rgbw(48, 16, 0, 0), // mother: orange
+    rgbw(40, 28, 0, 0), // son: yellow
 ];
 
 /// While the bath is occupied, people who haven't pressed yet breathe in
-/// white: one full dark → bright → dark cycle takes this long.
+/// white (the SK6812RGBW's own white LED, not R+G+B mixed): one full dark →
+/// bright → dark cycle takes this long.
 const BREATH_PERIOD_MS: u64 = 6000;
-/// Brightest value of each channel at the top of the breath.
+/// Brightest value of the white LED at the top of the breath.
 const BREATH_PEAK: u32 = 16;
-/// How much later each LED's breath runs than the previous one's (in chain
-/// order), so the light appears to travel along the chain from LED 0 towards
-/// the last one. 0 makes all LEDs breathe in step; to flow the other way
-/// round, index the LEDs from the end in `render`.
-const BREATH_PHASE_STEP_MS: u64 = 1000;
-// The whole chain's delay must stay within one period (`render` relies on it
-// to keep its subtraction from underflowing).
-const _: () = assert!((NUM_PEOPLE as u64 - 1) * BREATH_PHASE_STEP_MS <= BREATH_PERIOD_MS);
 
 /// The colors for one frame, one per person in `config::PEOPLE` order.
 /// `now_ms` is any monotonic clock in milliseconds (the breathing phase is
@@ -102,27 +104,24 @@ const _: () = assert!((NUM_PEOPLE as u64 - 1) * BREATH_PHASE_STEP_MS <= BREATH_P
 /// Current look: people who pressed today stay lit steadily in their own
 /// `PRESSED_COLORS` entry, whether or not the bath is occupied (it's the
 /// day's record). The rest breathe in white with a `BREATH_PERIOD_MS`
-/// period, each LED `BREATH_PHASE_STEP_MS` behind the one before it — but
-/// only while `occupied`; otherwise they're off.
-fn render(pressed: &[bool; NUM_PEOPLE], occupied: bool, now_ms: u64) -> [RGB8; NUM_PEOPLE] {
+/// period, all in step — but only while `occupied`; otherwise they're off.
+fn render(pressed: &[bool; NUM_PEOPLE], occupied: bool, now_ms: u64) -> [RGBW<u8>; NUM_PEOPLE] {
+    let breath = breath_color(now_ms);
     core::array::from_fn(|person_idx| {
         if pressed[person_idx] {
             PRESSED_COLORS[person_idx]
         } else if occupied {
-            // Delaying by `delay` means sampling the breath at `now - delay`;
-            // adding a whole period first keeps that from underflowing.
-            let delay = person_idx as u64 * BREATH_PHASE_STEP_MS;
-            breath_color(now_ms + BREATH_PERIOD_MS - delay)
+            breath
         } else {
-            RGB8::new(0, 0, 0)
+            OFF
         }
     })
 }
 
 /// White at the breath's brightness for `now_ms`: a triangle wave (up for half
 /// the period, down for the other half), squared so the perceived brightness
-/// changes evenly — WS2812 output is linear, but the eye isn't.
-fn breath_color(now_ms: u64) -> RGB8 {
+/// changes evenly — the LED output is linear, but the eye isn't.
+fn breath_color(now_ms: u64) -> RGBW<u8> {
     let half = BREATH_PERIOD_MS / 2;
     let phase = now_ms % BREATH_PERIOD_MS;
     let rising = if phase < half {
@@ -133,5 +132,5 @@ fn breath_color(now_ms: u64) -> RGB8 {
     let rising = rising as u32;
     let half = half as u32;
     let level = (rising * rising * BREATH_PEAK / (half * half)) as u8;
-    RGB8::new(level, level, level)
+    rgbw(0, 0, 0, level)
 }

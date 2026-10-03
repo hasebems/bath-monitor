@@ -17,7 +17,7 @@ pub const BUTTON_PINS: [u8; NUM_PEOPLE] = [2, 3, 4, 5, 6];
 pub const LIGHT_SENSOR_PIN: u8 = 26;
 
 #[allow(dead_code)]
-/// GPIO for the NeoPixel (WS2812) data line, one chain of `NUM_PEOPLE` LEDs
+/// GPIO for the NeoPixel (SK6812RGBW) data line, one chain of `NUM_PEOPLE` LEDs
 /// in the same order as `PEOPLE`/`BUTTON_PINS`.
 pub const NEOPIXEL_PIN: u8 = 15;
 

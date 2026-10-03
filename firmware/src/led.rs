@@ -1,6 +1,6 @@
 use embassy_rp::peripherals::{DMA_CH2, PIN_15, PIO1};
 use embassy_rp::pio::Pio;
-use embassy_rp::pio_programs::ws2812::{PioWs2812, PioWs2812Program};
+use embassy_rp::pio_programs::ws2812::{PioWs2812Program, RgbwPioWs2812};
 use embassy_rp::Peri;
 use embassy_time::{Duration, Instant, Timer};
 
@@ -8,8 +8,10 @@ use crate::config::NEOPIXEL_FRAME_INTERVAL_MS;
 use crate::irqs::Irqs;
 use crate::led_pattern;
 
-/// Owns the WS2812 NeoPixel chain (one LED per person, same order as
-/// `config::PEOPLE`) and drives it at a fixed frame rate
+/// Owns the SK6812RGBW NeoPixel chain (one LED per person, same order as
+/// `config::PEOPLE`; 32 bits per LED in GRBW order, otherwise the same
+/// one-wire protocol and timing as WS2812, so embassy-rp's WS2812 PIO program
+/// drives it) and drives it at a fixed frame rate
 /// (`NEOPIXEL_FRAME_INTERVAL_MS`, 10 fps), writing every frame whether or not
 /// anything changed.
 ///
@@ -38,13 +40,13 @@ pub async fn led_task(
     // drop bookkeeping is shared by all PIO blocks and would blank this pin).
     core::mem::forget((sm1, sm2, sm3));
     let program = PioWs2812Program::new(&mut common);
-    let mut ws2812 = PioWs2812::new(&mut common, sm0, dma_ch2, Irqs, pin, &program);
+    let mut sk6812 = RgbwPioWs2812::new(&mut common, sm0, dma_ch2, Irqs, pin, &program);
 
     let frame_interval = Duration::from_millis(NEOPIXEL_FRAME_INTERVAL_MS);
     let mut next_frame = Instant::now();
 
     loop {
-        ws2812
+        sk6812
             .write(&led_pattern::frame(Instant::now().as_millis()))
             .await;
 
