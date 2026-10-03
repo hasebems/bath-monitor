@@ -61,10 +61,15 @@ static MELODY_1: &[NoteEvent] = &[
     note(50, 60, 100, 30),
 ];
 static MELODY_2: &[NoteEvent] = &[
-    note(0, 60, 100, 15),
-    note(20, 62, 100, 15),
-    note(40, 64, 100, 15),
-    note(60, 65, 100, 30),
+    note(0, 76, 100, 16),
+    note(20, 75, 100, 16),
+    note(40, 76, 100, 16),
+    note(60, 75, 100, 16),
+    note(80, 76, 100, 16),
+    note(100, 71, 100, 16),
+    note(120, 74, 100, 16),
+    note(140, 72, 100, 16),
+    note(160, 69, 100, 60),
 ];
 static MELODY_3: &[NoteEvent] = &[
     note(0, 72, 100, 15),
@@ -80,7 +85,10 @@ static MELODY_4: &[NoteEvent] = &[
 
 /// "Press cancelled" sound: two low, falling notes, unlike any person's tune.
 /// Placeholder like the melodies above.
-static MELODY_CANCEL: &[NoteEvent] = &[note(0, 55, 100, 15), note(20, 48, 100, 40)];
+static MELODY_CANCEL: &[NoteEvent] = &[
+    note(0, 55, 100, 15),
+    note(20, 48, 100, 40),
+];
 
 /// Indexed by person_idx (0-4), matching `config::PEOPLE`, then
 /// `CANCEL_MELODY` — the values sent on `MELODY_CHANNEL`.
