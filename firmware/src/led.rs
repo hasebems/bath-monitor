@@ -12,7 +12,7 @@ use crate::led_pattern;
 /// `config::PEOPLE`; 32 bits per LED in GRBW order, otherwise the same
 /// one-wire protocol and timing as WS2812, so embassy-rp's WS2812 PIO program
 /// drives it) and drives it at a fixed frame rate
-/// (`NEOPIXEL_FRAME_INTERVAL_MS`, 10 fps), writing every frame whether or not
+/// (`NEOPIXEL_FRAME_INTERVAL_MS`, 50 fps), writing every frame whether or not
 /// anything changed.
 ///
 /// What each frame looks like — and the state it depends on — is entirely

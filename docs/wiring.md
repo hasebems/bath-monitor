@@ -28,7 +28,7 @@ GPIO26上で、(センサー基板上のコンパレータ/しきい値回路な
 
 ## NeoPixel(SK6812RGBW)押下インジケーター(5個、デイジーチェーン接続)
 
-LEDはSK6812RGBW(R/G/Bに加えて白のLEDを内蔵し、1個あたり32ビットをGRBWの順で送る。信号のタイミングはWS2812と同じ)を使います。ボタン1個につきNeoPixel1個を、1本のチェーンとして配線します(LED 0の`DIN` → GPIOデータピン、LED NのDOUT → LED N+1のDIN)。順序は`BUTTON_PINS`/`PEOPLE`と同じです。PIO1(PIO0はcyw43 Wi-FiのSPIリンクで使用中)+ DMA_CH2(DMA_CH0/CH1はcyw43が使用中)で駆動します。RP2350はRP2040(PIO2個、DMA12チャンネル)よりPIOブロック数(3個)とDMAチャンネル数(16個)が多いため、この割り当てはPico 2 W上でも余裕を持って有効です。その人物が今日ボタンを押していれば人ごとに決めた色で点灯し(色は`led_pattern.rs`の`PRESSED_COLORS`)、まだ押していなければ、在室(照度センサーが on)のときだけ、白(内蔵の白LED)で6秒周期にだんだん明るく/暗くを繰り返し(5個とも同じ位相。不在のときは消灯)、5個ぶんの状態は、押下の有無にかかわらず`NEOPIXEL_FRAME_INTERVAL_MS`=100ms(10fps)ごとに毎フレーム書き直されます(データ線がイベント時の1回きりにならないため、オシロで確認しやすくなります)。見え方(色や呼吸など)は`firmware/src/led_pattern.rs`だけで決まります。サーバーの`/api/led-state`から定期的に状態が再調整されます(`firmware/src/status_poll.rs`、`firmware/src/led.rs`を参照)。
+LEDはSK6812RGBW(R/G/Bに加えて白のLEDを内蔵し、1個あたり32ビットをGRBWの順で送る。信号のタイミングはWS2812と同じ)を使います。ボタン1個につきNeoPixel1個を、1本のチェーンとして配線します(LED 0の`DIN` → GPIOデータピン、LED NのDOUT → LED N+1のDIN)。順序は`BUTTON_PINS`/`PEOPLE`と同じです。PIO1(PIO0はcyw43 Wi-FiのSPIリンクで使用中)+ DMA_CH2(DMA_CH0/CH1はcyw43が使用中)で駆動します。RP2350はRP2040(PIO2個、DMA12チャンネル)よりPIOブロック数(3個)とDMAチャンネル数(16個)が多いため、この割り当てはPico 2 W上でも余裕を持って有効です。その人物が今日ボタンを押していれば人ごとに決めた色で点灯し(色は`led_pattern.rs`の`PRESSED_COLORS`)、まだ押していなければ、在室(照度センサーが on)のときだけ、白(内蔵の白LED)で1秒周期にだんだん明るく/暗くを繰り返し(5個とも同じ位相。いちばん暗いときも完全には消えない。不在のときは消灯)、5個ぶんの状態は、押下の有無にかかわらず`NEOPIXEL_FRAME_INTERVAL_MS`=20ms(50fps)ごとに毎フレーム書き直されます(データ線がイベント時の1回きりにならないため、オシロで確認しやすくなります)。見え方(色や呼吸など)は`firmware/src/led_pattern.rs`だけで決まります。サーバーの`/api/led-state`から定期的に状態が再調整されます(`firmware/src/status_poll.rs`、`firmware/src/led.rs`を参照)。
 
 | 信号 | GPIO |
 |---|---|

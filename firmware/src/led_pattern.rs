@@ -92,9 +92,17 @@ const PRESSED_COLORS: [RGBW<u8>; NUM_PEOPLE] = [
 /// While the bath is occupied, people who haven't pressed yet breathe in
 /// white (the SK6812RGBW's own white LED, not R+G+B mixed): one full dark →
 /// bright → dark cycle takes this long.
-const BREATH_PERIOD_MS: u64 = 6000;
+const BREATH_PERIOD_MS: u64 = 1000;
 /// Brightest value of the white LED at the top of the breath.
 const BREATH_PEAK: u32 = 16;
+/// Dimmest value at the bottom of the breath. Well above 0: the LED only has
+/// whole levels, and at the very bottom one level is a big jump to the eye
+/// (off → 1 looked like the LED suddenly going out, 1 → 2 doubles the light),
+/// so the breath stays where the steps are small enough to look smooth.
+/// (Dithering between levels over time was tried instead and flickered
+/// visibly at this dimness, so it isn't used.)
+const BREATH_FLOOR: u32 = 4;
+const _: () = assert!(BREATH_FLOOR < BREATH_PEAK && BREATH_PEAK <= 255);
 
 /// The colors for one frame, one per person in `config::PEOPLE` order.
 /// `now_ms` is any monotonic clock in milliseconds (the breathing phase is
@@ -103,8 +111,9 @@ const BREATH_PEAK: u32 = 16;
 ///
 /// Current look: people who pressed today stay lit steadily in their own
 /// `PRESSED_COLORS` entry, whether or not the bath is occupied (it's the
-/// day's record). The rest breathe in white with a `BREATH_PERIOD_MS`
-/// period, all in step — but only while `occupied`; otherwise they're off.
+/// day's record). The rest breathe in white between `BREATH_FLOOR` and
+/// `BREATH_PEAK` with a `BREATH_PERIOD_MS` period, all in step — but only
+/// while `occupied`; otherwise they're off.
 fn render(pressed: &[bool; NUM_PEOPLE], occupied: bool, now_ms: u64) -> [RGBW<u8>; NUM_PEOPLE] {
     let breath = breath_color(now_ms);
     core::array::from_fn(|person_idx| {
@@ -120,7 +129,8 @@ fn render(pressed: &[bool; NUM_PEOPLE], occupied: bool, now_ms: u64) -> [RGBW<u8
 
 /// White at the breath's brightness for `now_ms`: a triangle wave (up for half
 /// the period, down for the other half), squared so the perceived brightness
-/// changes evenly — the LED output is linear, but the eye isn't.
+/// changes evenly — the LED output is linear, but the eye isn't — and running
+/// from `BREATH_FLOOR` to `BREATH_PEAK`.
 fn breath_color(now_ms: u64) -> RGBW<u8> {
     let half = BREATH_PERIOD_MS / 2;
     let phase = now_ms % BREATH_PERIOD_MS;
@@ -129,8 +139,7 @@ fn breath_color(now_ms: u64) -> RGBW<u8> {
     } else {
         BREATH_PERIOD_MS - phase
     };
-    let rising = rising as u32;
-    let half = half as u32;
-    let level = (rising * rising * BREATH_PEAK / (half * half)) as u8;
-    rgbw(0, 0, 0, level)
+    let span = u64::from(BREATH_PEAK - BREATH_FLOOR);
+    let level = BREATH_FLOOR + (rising * rising * span / (half * half)) as u32;
+    rgbw(0, 0, 0, level as u8)
 }

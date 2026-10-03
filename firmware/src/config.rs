@@ -68,11 +68,12 @@ pub const AUDIO_DAMP_RATE: f32 = 0.05;
 pub const AUDIO_MINIMUM_LEVEL: f32 = 0.001;
 
 /// `led.rs` writes the whole NeoPixel chain once per frame, every frame,
-/// whether or not anything changed: 100 ms = 10 fps. So the data line is never
-/// idle for long (a single burst per event is hard to catch on a scope, and a
-/// stray glitch on the line is corrected by the next frame), and a change
-/// shows up within one frame.
-pub const NEOPIXEL_FRAME_INTERVAL_MS: u64 = 100;
+/// whether or not anything changed: 20 ms = 50 fps (fast enough that the
+/// white breathing's steps come on time; a 5-LED write takes only ~0.2 ms).
+/// So the data line is never idle for long (a single burst per event is hard
+/// to catch on a scope, and a stray glitch on the line is corrected by the
+/// next frame), and a change shows up within one frame.
+pub const NEOPIXEL_FRAME_INTERVAL_MS: u64 = 20;
 
 pub const BUTTON_DEBOUNCE_MS: u64 = 50;
 /// Holding a button this long (after the debounced press) cancels that
