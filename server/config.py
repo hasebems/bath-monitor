@@ -3,6 +3,12 @@ from pathlib import Path
 # Must match firmware/src/config.rs PEOPLE order/ids exactly.
 PEOPLE = ["grandpa", "grandma", "father", "mother", "son"]
 
+# Local hour at which presses reset for the new day, so a day runs from 05:00
+# to "29:00" (05:00 the next morning) under one date and late-night baths
+# still count for the previous evening. The dashboard shows 00:00-04:59 as
+# 24:00-28:59 of the previous date.
+DAY_START_HOUR = 5
+
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "data" / "bath_monitor.db"
 SCHEMA_PATH = BASE_DIR / "schema.sql"

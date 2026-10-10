@@ -11,14 +11,19 @@ import db
 
 def short_time(iso_str: str | None) -> str:
     """Compact display format for a timestamp, e.g. '09/01 15:49' — the
-    raw ISO8601+offset string is too long for the mobile-width dashboard."""
+    raw ISO8601+offset string is too long for the mobile-width dashboard.
+    Times before `config.DAY_START_HOUR` are shown on the previous day's
+    date past 24:00 (e.g. 09/02 01:30 -> '09/01 25:30'), matching the day
+    `db.day_of` counts them for."""
     if not iso_str:
         return ""
     try:
         dt = datetime.fromisoformat(iso_str)
     except ValueError:
         return iso_str
-    return dt.strftime("%m/%d %H:%M")
+    day = db.day_of(dt)
+    hour = dt.hour + 24 * (dt.date() - day).days
+    return "{} {:02d}:{:02d}".format(day.strftime("%m/%d"), hour, dt.minute)
 
 
 def create_app() -> Flask:
@@ -33,7 +38,11 @@ def create_app() -> Flask:
         if person not in config.PEOPLE:
             return jsonify(status="error", message="unknown person"), 400
         status = db.record_press(person)
-        return jsonify(status="ok", person=status.id, date=status.last_pressed_at[:10])
+        return jsonify(
+            status="ok",
+            person=status.id,
+            date=db.day_of(datetime.fromisoformat(status.last_pressed_at)).isoformat(),
+        )
 
     @app.post("/api/cancel")
     def api_cancel():

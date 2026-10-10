@@ -5,14 +5,15 @@ use embassy_time::{with_timeout, Duration};
 use crate::config::{BUTTON_DEBOUNCE_MS, BUTTON_LONG_PRESS_MS};
 use crate::debounce::Debouncer;
 use crate::led_pattern;
-use crate::music::{CANCEL_MELODY, MELODY_CHANNEL};
+use crate::music::{CANCEL_MELODY, FINAL_MELODY, MELODY_CHANNEL};
 use crate::outbox;
 
 /// One instance per button (pool_size must match `config::NUM_PEOPLE`).
 /// Pull-up input, button wired to GND: a press reads as `Level::Low`.
 ///
 /// Releasing within `BUTTON_LONG_PRESS_MS` of the press registers it (LED,
-/// melody, `POST /api/press`); holding longer instead cancels that person's
+/// melody, `POST /api/press` — or, if that press makes everyone pressed today,
+/// `FINAL_MELODY` instead of the person's own); holding longer instead cancels that person's
 /// press for today (LED off, cancel sound, `POST /api/cancel`) — and plays
 /// no press melody, so the two never sound alike.
 #[embassy_executor::task(pool_size = 5)]
@@ -43,8 +44,13 @@ pub async fn button_task(pin: Peri<'static, AnyPin>, person_idx: usize) {
             // keeps retrying, once it can). The LED and melody below must never
             // wait on anything network-related.
             outbox::mark_press(person_idx);
-            led_pattern::set_pressed(person_idx, true);
-            MELODY_CHANNEL.send(person_idx).await;
+            let last = led_pattern::set_pressed(person_idx, true);
+            if last {
+                log::info!("button {}: everyone has pressed", person_idx);
+            }
+            MELODY_CHANNEL
+                .send(if last { FINAL_MELODY } else { person_idx })
+                .await;
             continue;
         }
 

@@ -44,5 +44,5 @@ sudo systemctl restart bath-monitor
 ## 補足事項
 
 - `server/data/bath_monitor.db`は再起動をまたいで永続化されます(ローカルディスク上にあり、gitignore対象です)。過去の`occupancy_log`データを残しておきたい場合はバックアップしてください。
-- 押下状況の日次リセットは、Piのシステム時計/タイムゾーンが家庭の設定に合っていることに依存します(`date.today()`はローカル時刻を使用します) — 想定と違う時刻にリセットされるようであれば`timedatectl`で確認してください。
+- 押下状況の日次リセット(ローカル時刻の朝5時、`server/config.py::DAY_START_HOUR`)は、Piのシステム時計/タイムゾーンが家庭の設定に合っていることに依存します(`datetime.now()`はローカル時刻を使用します) — 想定と違う時刻にリセットされるようであれば`timedatectl`で確認してください。
 - ユニットファイル内の`Restart=always`により、クラッシュや`journalctl`で確認できる例外が発生した場合でも、手動対応なしに`RestartSec=5`以内にサービスが復旧します。

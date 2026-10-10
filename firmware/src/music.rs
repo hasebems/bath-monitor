@@ -1,5 +1,6 @@
 //! The "music-data playback module" from `docs/additional_spec.md`: holds
-//! the 5 fixed melodies (one per `config::PEOPLE` entry) and, once
+//! the 5 fixed melodies (one per `config::PEOPLE` entry), plus the cancel
+//! sound and the "last one of the day" melody, and, once
 //! triggered by a message on `MELODY_CHANNEL`, schedules their note
 //! events and dispatches them as `waveform::NoteOn` messages, alternating
 //! between `waveform::SLOT_CHANNELS[0]` and `[1]`.
@@ -16,7 +17,7 @@ use crate::config::{AUDIO_TIME_UNIT_MS, NUM_PEOPLE};
 use crate::waveform::{NoteOn, SLOT_CHANNELS};
 
 /// Which melody to (re)start playing: an index into `MUSIC_DATA` — one per
-/// `config::PEOPLE` entry, plus `CANCEL_MELODY` (see
+/// `config::PEOPLE` entry, plus `CANCEL_MELODY` and `FINAL_MELODY` (see
 /// `docs/additional_spec.md`).
 /// Sent from CORE0's button tasks to this CORE1 task — the one channel that
 /// crosses cores. (Neither the NeoPixel state nor data bound for the server
@@ -26,6 +27,10 @@ pub static MELODY_CHANNEL: Channel<CriticalSectionRawMutex, usize, 8> = Channel:
 /// `MELODY_CHANNEL` value for the "press cancelled" sound, one past the
 /// per-person melodies.
 pub const CANCEL_MELODY: usize = NUM_PEOPLE;
+
+/// `MELODY_CHANNEL` value for the melody played, instead of the person's own,
+/// by the press that makes everyone pressed today.
+pub const FINAL_MELODY: usize = NUM_PEOPLE + 1;
 
 /// One entry in a music data table, exactly as described in
 /// `docs/additional_spec.md`: `time`/`duration` are in `AUDIO_TIME_UNIT_MS`
@@ -51,16 +56,17 @@ const fn note(time: u32, pitch: u8, volume: u8, duration: u32) -> NoteEvent {
 // are not real compositions — just distinct enough motifs to exercise the
 // playback module; replace with real tunes whenever those are authored.
 static MELODY_0: &[NoteEvent] = &[
-    note(0, 60, 100, 20),
-    note(25, 64, 100, 20),
-    note(50, 67, 100, 30),
+    note(0, 63, 100, 20),
+    note(40, 63, 100, 12),
+    note(60, 63, 100, 12),
+    note(80, 63, 100, 12),
+    note(100, 68, 100, 12),
+    note(120, 65, 100, 12),
+    note(140, 63, 100, 12),
+    note(200, 65, 100, 12),
+    note(240, 65, 100, 12),
 ];
 static MELODY_1: &[NoteEvent] = &[
-    note(0, 67, 100, 20),
-    note(25, 64, 100, 20),
-    note(50, 60, 100, 30),
-];
-static MELODY_2: &[NoteEvent] = &[
     note(0, 76, 100, 16),
     note(20, 75, 100, 16),
     note(40, 76, 100, 16),
@@ -70,6 +76,17 @@ static MELODY_2: &[NoteEvent] = &[
     note(120, 74, 100, 16),
     note(140, 72, 100, 16),
     note(160, 69, 100, 60),
+];
+static MELODY_2: &[NoteEvent] = &[
+    note(0, 82, 100, 10),
+    note(15, 80, 100, 14),
+    note(45, 82, 80, 10),
+    note(60, 77, 100, 16),
+    note(90, 82, 80, 16),
+    note(120, 80, 100, 12),
+    note(135, 77, 100, 25),
+    note(165, 75, 100, 15),
+    note(180, 71, 100, 50),
 ];
 static MELODY_3: &[NoteEvent] = &[
     note(0, 72, 100, 15),
@@ -86,19 +103,43 @@ static MELODY_4: &[NoteEvent] = &[
 /// "Press cancelled" sound: two low, falling notes, unlike any person's tune.
 /// Placeholder like the melodies above.
 static MELODY_CANCEL: &[NoteEvent] = &[
-    note(0, 55, 100, 15),
-    note(20, 48, 100, 40),
+    note(0, 78, 100, 6),
+    note(12, 84, 100, 6),
+    note(24, 78, 100, 6),
+    note(36, 84, 100, 6),
+];
+
+/// "Everyone has bathed — you're the last": a rising arpeggio ending on a
+/// held high note, unlike any person's tune. Placeholder like the melodies
+/// above.
+static MELODY_FINAL: &[NoteEvent] = &[
+    note(0, 66, 100, 36),
+    note(40, 66, 100, 36),
+    note(80, 67, 100, 36),
+    note(120, 69, 100, 36),
+    note(160, 69, 100, 36),
+    note(200, 67, 100, 36),
+    note(240, 66, 100, 36),
+    note(280, 64, 100, 36),
+    note(320, 62, 100, 36),
+    note(360, 62, 100, 36),
+    note(400, 64, 100, 36),
+    note(440, 66, 100, 36),
+    note(480, 66, 100, 46),
+    note(540, 64, 100, 16),
+    note(560, 64, 100, 36),
 ];
 
 /// Indexed by person_idx (0-4), matching `config::PEOPLE`, then
-/// `CANCEL_MELODY` — the values sent on `MELODY_CHANNEL`.
-static MUSIC_DATA: [&[NoteEvent]; NUM_PEOPLE + 1] = [
+/// `CANCEL_MELODY` and `FINAL_MELODY` — the values sent on `MELODY_CHANNEL`.
+static MUSIC_DATA: [&[NoteEvent]; NUM_PEOPLE + 2] = [
     MELODY_0,
     MELODY_1,
     MELODY_2,
     MELODY_3,
     MELODY_4,
     MELODY_CANCEL,
+    MELODY_FINAL,
 ];
 
 /// Drains `MELODY_CHANNEL` and plays back the selected melody. A new event

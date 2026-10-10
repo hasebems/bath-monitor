@@ -105,3 +105,46 @@ def test_index_page_lists_people(client):
     assert resp.status_code == 200
     for person in config.PEOPLE:
         assert person.encode() in resp.data
+
+
+def _fix_now(monkeypatch, iso):
+    import db
+    from datetime import datetime
+
+    monkeypatch.setattr(db, "_now", lambda: datetime.fromisoformat(iso))
+
+
+def _grandpa_pressed(client):
+    status = client.get("/api/status").get_json()
+    return next(p for p in status["people"] if p["id"] == "grandpa")["pressed_today"]
+
+
+def test_press_after_midnight_counts_for_previous_day(client, monkeypatch):
+    _fix_now(monkeypatch, "2026-10-10T01:30:00+09:00")
+    resp = client.post("/api/press", json={"person": "grandpa"})
+    assert resp.get_json()["date"] == "2026-10-09"
+
+    _fix_now(monkeypatch, "2026-10-10T04:59:59+09:00")
+    assert _grandpa_pressed(client) is True
+
+
+def test_presses_reset_at_day_start_hour(client, monkeypatch):
+    _fix_now(monkeypatch, "2026-10-09T21:00:00+09:00")
+    client.post("/api/press", json={"person": "grandpa"})
+
+    _fix_now(monkeypatch, "2026-10-10T04:59:59+09:00")
+    assert _grandpa_pressed(client) is True
+    assert client.get("/api/led-state").get_data(as_text=True) == "10000"
+
+    _fix_now(monkeypatch, "2026-10-10T05:00:00+09:00")
+    assert _grandpa_pressed(client) is False
+    assert client.get("/api/led-state").get_data(as_text=True) == "00000"
+
+
+def test_short_time_shows_late_night_as_previous_day_past_24():
+    from app import short_time
+
+    assert short_time("2026-10-09T21:05:00+09:00") == "10/09 21:05"
+    assert short_time("2026-10-10T01:30:00+09:00") == "10/09 25:30"
+    assert short_time("2026-10-10T04:59:00+09:00") == "10/09 28:59"
+    assert short_time("2026-10-10T05:00:00+09:00") == "10/10 05:00"

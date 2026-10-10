@@ -43,8 +43,21 @@ fn update(change: impl FnOnce(&mut LedState)) {
 
 /// One person pressed (`true`, immediate local feedback when the button is
 /// released) or cancelled with a long press (`false`).
-pub fn set_pressed(person_idx: usize, pressed: bool) {
-    update(|state| state.pressed[person_idx] = pressed);
+///
+/// Returns whether this press made the person the last one of the day: they
+/// hadn't pressed yet and now everyone has (checked under the same lock as the
+/// write, so two buttons released together can't both, or neither, count as
+/// last). Re-pressing once everyone has pressed doesn't count. This board's
+/// state is all it goes by — before the first `/api/led-state` sync after boot,
+/// the others count as not pressed.
+pub fn set_pressed(person_idx: usize, pressed: bool) -> bool {
+    let mut completed = false;
+    update(|state| {
+        let was_pressed = state.pressed[person_idx];
+        state.pressed[person_idx] = pressed;
+        completed = pressed && !was_pressed && state.pressed.iter().all(|&p| p);
+    });
+    completed
 }
 
 /// Everyone's pressed state at once, from the server's `/api/led-state`
@@ -82,11 +95,11 @@ const OFF: RGBW<u8> = rgbw(0, 0, 0, 0);
 /// whitish (the white LED stays off) so it can't be mistaken for the "not
 /// yet" breathing below.
 const PRESSED_COLORS: [RGBW<u8>; NUM_PEOPLE] = [
-    rgbw(0, 0, 48, 0),  // grandpa: blue
+    rgbw(0, 40, 0, 0),  // grandpa: green
     rgbw(40, 0, 20, 0), // grandma: pink
-    rgbw(0, 40, 0, 0),  // father: green
-    rgbw(48, 16, 0, 0), // mother: orange
-    rgbw(40, 28, 0, 0), // son: yellow
+    rgbw(40, 16, 0, 0), // father: orange
+    rgbw(50, 0, 0, 0),  // mother: red
+    rgbw(0, 0, 48, 0),  // son: blue
 ];
 
 /// While the bath is occupied, people who haven't pressed yet breathe in

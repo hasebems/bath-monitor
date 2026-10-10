@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import config
@@ -15,6 +15,17 @@ def _connect() -> sqlite3.Connection:
     return conn
 
 
+def _now() -> datetime:
+    return datetime.now().astimezone().replace(microsecond=0)
+
+
+def day_of(dt: datetime) -> date:
+    """The "bath day" `dt` belongs to: days start at `config.DAY_START_HOUR`
+    local time, not midnight, so a press at 01:00 still counts for the
+    previous evening."""
+    return (dt - timedelta(hours=config.DAY_START_HOUR)).date()
+
+
 def init_db() -> None:
     with _connect() as conn:
         conn.executescript(Path(config.SCHEMA_PATH).read_text())
@@ -26,7 +37,7 @@ def init_db() -> None:
 
 
 def get_status() -> Status:
-    today = datetime.now().date().isoformat()
+    today = day_of(_now()).isoformat()
     with _connect() as conn:
         rows = conn.execute(
             "SELECT person, last_pressed_at, last_pressed_date FROM press_status"
@@ -59,9 +70,9 @@ def get_led_state() -> str:
 
 
 def record_press(person: str) -> PersonStatus:
-    now = datetime.now().astimezone().replace(microsecond=0)
+    now = _now()
     now_iso = now.isoformat()
-    today = now.date().isoformat()
+    today = day_of(now).isoformat()
     with _connect() as conn:
         conn.execute(
             "UPDATE press_status SET last_pressed_at = ?, last_pressed_date = ? WHERE person = ?",
@@ -83,7 +94,7 @@ def cancel_press(person: str) -> PersonStatus:
 
 
 def record_occupancy(occupied: bool) -> tuple[bool, str]:
-    now_iso = datetime.now().astimezone().replace(microsecond=0).isoformat()
+    now_iso = _now().isoformat()
     with _connect() as conn:
         conn.execute(
             "INSERT INTO occupancy_log (occupied, changed_at) VALUES (?, ?)",
