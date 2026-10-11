@@ -106,7 +106,8 @@ firmware/cyw43-firmware/   (cyw43のファームウェア/CLM/nvramのBLOB)
 firmware/src/{main,secrets.rs.example,config,irqs,debounce,net,wifi,outbox,buttons,occupancy,http_client,led,led_pattern,status_poll,audio,waveform,music}.rs
                             (secrets.rsは実際のWi-Fi情報を入れるgitignore対象のファイル)
 server/{requirements.txt,config.py,schema.sql,db.py,models.py,app.py,wsgi.py}
-server/deploy/bath-monitor.service
+server/deploy/bath-monitor.service.example
+                            (bath-monitor.serviceはこれをコピーしてパスを書き換えた、gitignore対象のファイル)
 server/templates/{base,status}.html, server/static/style.css
 server/tests/{conftest.py,test_api.py}
 server/data/.gitkeep   (bath_monitor.dbは実行時状態のためgitignore対象)

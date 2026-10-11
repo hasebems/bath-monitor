@@ -29,7 +29,7 @@ pytest tests/ -q                   # all tests
 pytest tests/test_api.py::test_press_is_idempotent_same_day -q   # single test
 ```
 
-No linter is configured for the server yet. See `docs/deploy.md` for the systemd unit (`server/deploy/bath-monitor.service`) that runs `wsgi.py` on boot with auto-restart.
+No linter is configured for the server yet. See `docs/deploy.md` for the systemd unit (sample at `server/deploy/bath-monitor.service.example`; the edited copy `server/deploy/bath-monitor.service` is gitignored) that runs `wsgi.py` on boot with auto-restart.
 
 ### Firmware (`firmware/`)
 

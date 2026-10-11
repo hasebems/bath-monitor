@@ -7,20 +7,37 @@
 ## インストール
 
 ```bash
-git clone https://github.com/hasebems/bath-monitor.git ~/bath-monitor
-cd ~/bath-monitor/server
+mkdir -p ~/xxx && cd ~/xxx
+git clone https://github.com/hasebems/bath-monitor.git
+cd ~/xxx/bath-monitor/server
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
-`/home/pi/bath-monitor`以外の場所にcloneする場合や、`pi`以外のユーザーで実行する場合は、以下のパスを適宜調整してください。
+この手順では、リポジトリを`~/xxx/bath-monitor`(`/home/pi/xxx/bath-monitor`)に置くものとします。`xxx`は実際に置くフォルダ名に読み替えてください。`pi`以外のユーザーで実行する場合も、以下のパスを適宜調整してください。
+
+## 手動での起動(動作確認)
+
+サービスとして登録する前に、手動で起動して動くことを確かめられます。本番用の起動は`wsgi.py`です(下記のsystemdサービスが実行するのと同じコマンドです)。
+
+```bash
+cd ~/xxx/bath-monitor/server
+.venv/bin/python wsgi.py           # http://<pi-hostname-or-ip>:8080/
+```
+
+`Serving on http://0.0.0.0:8080`と表示されれば起動しています。確認したらCtrl+Cで止めてください(動かしたままだと8080番ポートがふさがり、サービスが起動できません)。
+
+`python app.py`でも起動できますが、こちらはFlask付属の開発用サーバーで、起動時に「This is a development server. Do not use it in a production deployment.」という警告が出ます。開発用のサーバーは手元での確認向けで、長時間の稼働には向かないため、Pi上では`wsgi.py`を使います。`app.py`はアプリ本体(ルートの定義)で、`wsgi.py`はそれを本番用WSGIサーバーのwaitressで起動するだけのファイルです。
 
 ## systemdサービス
 
-`server/deploy/bath-monitor.service`がユニットのテンプレートです — 長期間無人稼働させるため、`app.py`のFlask開発用サーバーではなく、`server/wsgi.py`(本番用WSGIサーバーであるwaitress)を実行します。
+`server/deploy/bath-monitor.service.example`がユニットのサンプルです。これを`server/deploy/bath-monitor.service`(gitの管理対象外)にコピーし、パスを自分の環境に合わせて書き換えてから使います(`firmware/src/secrets.rs.example`と同じ扱い)。このユニットは、長期間無人稼働させるため、`app.py`のFlask開発用サーバーではなく、`server/wsgi.py`(本番用WSGIサーバーであるwaitress)を実行します。
 
 ```bash
-sudo cp ~/bath-monitor/server/deploy/bath-monitor.service /etc/systemd/system/
+cd ~/xxx/bath-monitor/server/deploy
+cp bath-monitor.service.example bath-monitor.service
+nano bath-monitor.service          # WorkingDirectory/ExecStartの xxx を実際のフォルダ名に書き換える
+sudo cp bath-monitor.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now bath-monitor
 ```
@@ -36,7 +53,7 @@ journalctl -u bath-monitor -f
 ## コード変更後の更新方法
 
 ```bash
-cd ~/bath-monitor && git pull
+cd ~/xxx/bath-monitor && git pull
 cd server && .venv/bin/pip install -r requirements.txt   # requirements.txtが変更された場合のみ
 sudo systemctl restart bath-monitor
 ```

@@ -6,8 +6,8 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=pi
-WorkingDirectory=/home/pi/bath-monitor/server
-ExecStart=/home/pi/bath-monitor/server/.venv/bin/python /home/pi/bath-monitor/server/wsgi.py
+WorkingDirectory=/home/pi/xxx/bath-monitor/server
+ExecStart=/home/pi/xxx/bath-monitor/server/.venv/bin/python /home/pi/xxx/bath-monitor/server/wsgi.py
 Restart=always
 RestartSec=5
 

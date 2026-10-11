@@ -22,7 +22,8 @@ bath-monitor は以下の機能を持っています。
 cd server
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python app.py            # http://<this-machine>:8080
+python app.py            # 開発用サーバー(手元での確認用。警告が出るのは正常) http://<this-machine>:8080
+python wsgi.py           # 本番用サーバー(waitress。Pi上ではこちら) 同じく :8080
 ```
 
 テスト: `pytest tests/ -q`(`server/`ディレクトリで、venvを有効化した状態で実行)。
