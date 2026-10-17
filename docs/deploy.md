@@ -74,7 +74,18 @@ cd server && .venv/bin/pip install -r requirements.txt   # requirements.txtが�
 sudo systemctl restart bath-monitor
 ```
 
-`bath-monitor.service.example`が更新された場合(表示名の`Environment=`の行の追加など)、自分の`bath-monitor.service`には自動では反映されません。差分を見て必要な行を書き足し、上の「ダッシュボードの表示名」と同じ手順でコピーし直してください。
+`bath-monitor.service.example`が更新された場合(表示名の`Environment=`の行の追加など)、自分の`bath-monitor.service`には自動では反映されません。差分を見て必要な行を書き足し、上の「ダッシュボードの表示名」と同じ手順でコピーし直してください。`.example`をもう一度`bath-monitor.service`にコピーし直すと、書き換えたパスが`xxx`に戻り、サービスが起動しなくなります(実際に2回起きています)。
+
+### 再起動後にページが開けないとき
+
+まず、ユニットファイルのパスが`xxx`のままになっていないかを確認します。
+
+```bash
+grep -n xxx /etc/systemd/system/bath-monitor.service   # 何か出たら、パスが書き換えられていない
+systemctl status bath-monitor --no-pager
+```
+
+`systemctl status`に`status=200/CHDIR`と出ていれば`WorkingDirectory=`のフォルダが、`status=203/EXEC`と出ていれば`ExecStart=`のファイルが見つかっていません。`server/deploy/bath-monitor.service`のパスを直し、`/etc/systemd/system/`にコピーし直して、`sudo systemctl daemon-reload`と`sudo systemctl restart bath-monitor`を行ってください。
 
 ## 補足事項
 

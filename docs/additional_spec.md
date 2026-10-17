@@ -274,7 +274,7 @@
 
 ## ダッシュボード(Webページ)の日本語化
 
-**状態:** 実装済み(文言は`server/templates/`、表示名は`server/config.py`の`load_display_names`/`DISPLAY_NAMES`と`server/app.py`の`display_name`フィルタ、見本は`server/deploy/bath-monitor.service.example`。サーバーのテストは通過し、C localeで環境変数から渡した日本語の表示名が表示されることも確認済み。Pi上のsystemdでの表示は未確認)
+**状態:** 実装済み(文言は`server/templates/`、表示名は`server/config.py`の`load_display_names`/`DISPLAY_NAMES`と`server/app.py`の`display_name`フィルタ、見本は`server/deploy/bath-monitor.service.example`。サーバーのテストは通過し、C localeで環境変数から渡した日本語の表示名が表示されることも確認済み。Pi上のsystemdで動かし、日本語のページが表示されることも確認済み(2026-10-17))
 
 **仕様:**
 
