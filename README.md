@@ -1,5 +1,7 @@
 # bath-monitor
 
+<img src="docs/bath-monitor.jpg" alt="bath-monitor" width="400">
+
 5人家族の我が家では、お風呂に最後に入った人が湯船の水を抜いて洗うことになっています。しかし、その運用には以下の問題があります。
 - まだ入ってない人がいるのに、湯船が空になって洗われていた
 - もうみんな入ったのに、まだ入っていない人がいると勘違いして、そのまま朝まで湯船が洗われなかった
@@ -15,6 +17,9 @@ bath-monitor は以下の機能を持っています。
 - 携帯や PC でダッシュボードにアクセスすれば、誰が入ったか、今誰かが入っているかをリアルタイムに検知可能
 
 設計の詳細は`docs/design.md`、HTTPの契約(プロトコル)は`docs/protocol.md`、ピン割り当ては`docs/wiring.md`を参照してください。embassy-rpのPIOの不具合の調査記録と回避策は`docs/embassy-rp-pio-drop-bug.md`にまとめています。
+
+また、筐体や電子回路の作り方については、fabble の方にまとめました。  
+https://fabble.cc/kigakudoh/bathmonitor
 
 ## サーバー
 
@@ -63,3 +68,10 @@ cargo run --release       # ビルドし、BOOTSELモードのPico 2 Wにpicotoo
 
 - 照度センサーによる在室判定を、時刻(昼か夜か)と組み合わせて行う
 - 人が入っていないときは、NeoPixelをかなり暗くするか、完全に消す
+
+### 報告記録
+
+- Fablab浜松の定例会合にて
+- CoderDojo浜松の発表
+    - 2026/9/27 (`docs/slides/bath-monitor-intro.pptx`)
+    - 2026/10/25

@@ -4,6 +4,14 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
+# no_std target has no `test` crate; keeps rust-analyzer's `cargo check --all-targets`
+# from failing with E0463 "can't find crate for `test`".
+[[bin]]
+name = "bath-monitor-firmware"
+path = "src/main.rs"
+test = false
+bench = false
+
 [dependencies]
 embassy-executor = { version = "0.10.0" }
 embassy-time = { version = "0.5.1" }
