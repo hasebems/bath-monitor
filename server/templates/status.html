@@ -2,16 +2,16 @@
 
 {% block content %}
 <main>
-  <h1>Bath Monitor</h1>
+  <h1>お風呂モニター</h1>
 
   <section class="occupancy {{ 'occupied' if status.occupied else 'vacant' }}">
     {% if status.occupied %}
-      <p class="banner">Bath occupied</p>
-      <p class="since">since {{ status.occupied_since | short_time }}</p>
+      <p class="banner">入浴中</p>
+      <p class="since">{{ status.occupied_since | short_time }} から</p>
     {% else %}
-      <p class="banner">Bath vacant</p>
+      <p class="banner">空いています</p>
       {% if status.occupied_since %}
-        <p class="since">last change {{ status.occupied_since | short_time }}</p>
+        <p class="since">{{ status.occupied_since | short_time }} に出ました</p>
       {% endif %}
     {% endif %}
   </section>
@@ -20,8 +20,8 @@
     {% for person in status.people %}
     <li class="pill {{ 'pressed' if person.pressed_today else 'not-pressed' }}">
       <div class="pill-main">
-        <span class="name">{{ person.id }}</span>
-        <span class="state">{{ 'Pressed ✓' if person.pressed_today else 'Not yet' }}</span>
+        <span class="name">{{ person.id | display_name }}</span>
+        <span class="state">{{ '入浴済み ✓' if person.pressed_today else 'まだ' }}</span>
       </div>
       {% if person.last_pressed_at %}
         <span class="time">{{ person.last_pressed_at | short_time }}</span>

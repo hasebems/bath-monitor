@@ -10,6 +10,13 @@ WorkingDirectory=/home/pi/xxx/bath-monitor/server
 ExecStart=/home/pi/xxx/bath-monitor/server/.venv/bin/python /home/pi/xxx/bath-monitor/server/wsgi.py
 Restart=always
 RestartSec=5
+# Names shown on the dashboard, one per person id in server/config.py PEOPLE
+# (BATH_MONITOR_NAME_<ID in capitals>). Unset or empty -> shown by the id.
+Environment=BATH_MONITOR_NAME_GRANDPA=おじいちゃん
+Environment=BATH_MONITOR_NAME_GRANDMA=おばあちゃん
+Environment=BATH_MONITOR_NAME_FATHER=お父さん
+Environment=BATH_MONITOR_NAME_MOTHER=お母さん
+Environment=BATH_MONITOR_NAME_SON=息子
 
 [Install]
 WantedBy=multi-user.target

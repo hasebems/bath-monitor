@@ -26,9 +26,16 @@ def short_time(iso_str: str | None) -> str:
     return "{} {:02d}:{:02d}".format(day.strftime("%m/%d"), hour, dt.minute)
 
 
+def display_name(person_id: str) -> str:
+    """Name shown on the dashboard for a person id (see
+    `config.load_display_names`)."""
+    return config.DISPLAY_NAMES.get(person_id, person_id)
+
+
 def create_app() -> Flask:
     app = Flask(__name__)
     app.jinja_env.filters["short_time"] = short_time
+    app.jinja_env.filters["display_name"] = display_name
     db.init_db()
 
     @app.post("/api/press")

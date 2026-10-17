@@ -274,13 +274,39 @@
 
 ## ダッシュボード(Webページ)の日本語化
 
-**状態:** 検討中
+**状態:** 実装済み(文言は`server/templates/`、表示名は`server/config.py`の`load_display_names`/`DISPLAY_NAMES`と`server/app.py`の`display_name`フィルタ、見本は`server/deploy/bath-monitor.service.example`。サーバーのテストは通過し、C localeで環境変数から渡した日本語の表示名が表示されることも確認済み。Pi上のsystemdでの表示は未確認)
 
 **仕様:**
 
-- サーバーが表示するダッシュボード(`server/templates/`)の表示を、すべて日本語にする。現状は、タイトル(「Bath Monitor」)、在室状態(「Bath occupied」「Bath vacant」「since」「last change」)、押下状態(「Pressed ✓」「Not yet」)などが英語で、人の名前も英語のID(`grandpa`など)のまま表示している
+- サーバーが表示するダッシュボード(`server/templates/`)の表示を日本語にする。現状は、タイトル(「Bath Monitor」)、在室状態(「Bath occupied」「Bath vacant」「since」「last change」)、押下状態(「Pressed ✓」「Not yet」)などが英語で、人の名前も英語のID(`grandpa`など)のまま表示している
+- 文言は次のとおりとする
+
+    | 箇所 | 現状 | 日本語化後 |
+    |---|---|---|
+    | タイトル(`<title>`と見出し) | Bath Monitor | お風呂モニター |
+    | 在室のとき | Bath occupied / since `<時刻>` | 入浴中 / `<時刻>` から |
+    | 不在のとき | Bath vacant / last change `<時刻>` | 空いています / `<時刻>` に出ました |
+    | 押した人 | Pressed ✓ | 入浴済み ✓ |
+    | まだ押していない人 | Not yet | まだ |
+
+    - 時刻の表示形式(`short_time`の「10/09 25:30」の形。「日次リセットの時刻」参照)は変えない
+- 5人の表示名を、systemdのユニットファイル(`server/deploy/bath-monitor.service.example`)で設定できるようにする
+    - 人のID(`server/config.py`の`PEOPLE`。ファームウェアとの取り決めとDBのキーに使う)は変えず、IDとは別に、ダッシュボードに出す表示名を持たせる
+    - 表示名は、ユニットファイルの`[Service]`に、人ごとの環境変数として書く。変数名は`BATH_MONITOR_NAME_<IDを大文字にしたもの>`とする。サーバーは起動時にこれらの環境変数を読む
+
+        ```ini
+        Environment=BATH_MONITOR_NAME_GRANDPA=おじいちゃん
+        Environment=BATH_MONITOR_NAME_GRANDMA=おばあちゃん
+        Environment=BATH_MONITOR_NAME_FATHER=お父さん
+        Environment=BATH_MONITOR_NAME_MOTHER=お母さん
+        Environment=BATH_MONITOR_NAME_SON=息子
+        ```
+
+    - リポジトリの`bath-monitor.service.example`には、上のような見本の表示名を書いておく。実際の家族の名前は、コピーして編集した`server/deploy/bath-monitor.service`(すでに`.gitignore`に入っている)に書く。家族の名前をリポジトリに入れないため
+    - 表示の順番は、従来どおり`PEOPLE`の順とする(ユニットファイルの書き順には依らない)
+    - ある人の環境変数が無い場合や空の場合は、その人はIDのまま表示する(サーバーは起動し、動作を続ける)。systemdを使わずに`python app.py`などで起動した開発時も、環境変数を設定しなければIDのまま表示される
+    - 表示名を変えたら、ユニットファイルを`/etc/systemd/system/`にコピーし直し、`sudo systemctl daemon-reload`と`sudo systemctl restart bath-monitor`を行う(`docs/deploy.md`に手順を追記する)
+- `/api/*`のJSONやテキストの応答(ファームウェアとの取り決め、`docs/protocol.md`)は変更しない。`/api/status`の`id`もIDのまま返し、表示名は含めない。日本語にするのは、人が見るページの表示だけとする
 
 **未決定事項:**
-- 各表示の日本語の文言
-- 人の名前の表示 — ID(`config.PEOPLE`。ファームウェアとの取り決めにも使うため変えない)とは別に、表示用の日本語名を持たせるかどうか
-- `/api/*`のJSONやテキストの応答(ファームウェアとの取り決め、`docs/protocol.md`)は変更しない。日本語にするのは、人が見るページの表示だけとする
+- 文言は上の表を初期値とし、実際に表示を見て調整してよい

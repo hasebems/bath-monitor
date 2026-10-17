@@ -104,7 +104,43 @@ def test_index_page_lists_people(client):
     resp = client.get("/")
     assert resp.status_code == 200
     for person in config.PEOPLE:
-        assert person.encode() in resp.data
+        assert config.DISPLAY_NAMES[person] in resp.get_data(as_text=True)
+
+
+def test_index_page_shows_display_names(client, monkeypatch):
+    monkeypatch.setattr(
+        config, "DISPLAY_NAMES", dict(config.DISPLAY_NAMES, grandpa="おじいちゃん")
+    )
+    client.post("/api/press", json={"person": "grandpa"})
+    page = client.get("/").get_data(as_text=True)
+    assert "おじいちゃん" in page
+    assert "入浴済み ✓" in page
+    assert "まだ" in page
+    # The API keeps using ids.
+    status = client.get("/api/status").get_json()
+    assert status["people"][0]["id"] == "grandpa"
+
+
+def test_index_page_shows_occupancy_in_japanese(client):
+    assert "空いています" in client.get("/").get_data(as_text=True)
+    client.post("/api/occupancy", json={"occupied": True})
+    page = client.get("/").get_data(as_text=True)
+    assert "入浴中" in page
+    assert "から" in page
+    client.post("/api/occupancy", json={"occupied": False})
+    page = client.get("/").get_data(as_text=True)
+    assert "空いています" in page
+    assert "に出ました" in page
+
+
+def test_display_names_fall_back_to_ids():
+    names = config.load_display_names(
+        {"BATH_MONITOR_NAME_GRANDPA": "おじいちゃん", "BATH_MONITOR_NAME_SON": "  "}
+    )
+    assert names["grandpa"] == "おじいちゃん"
+    assert names["son"] == "son"
+    assert names["father"] == "father"
+    assert list(names) == config.PEOPLE
 
 
 def _fix_now(monkeypatch, iso):

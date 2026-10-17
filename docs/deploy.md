@@ -36,7 +36,7 @@ cd ~/xxx/bath-monitor/server
 ```bash
 cd ~/xxx/bath-monitor/server/deploy
 cp bath-monitor.service.example bath-monitor.service
-nano bath-monitor.service          # WorkingDirectory/ExecStartの xxx を実際のフォルダ名に書き換える
+nano bath-monitor.service          # WorkingDirectory/ExecStartの xxx を実際のフォルダ名に、BATH_MONITOR_NAME_* を家族の表示名に書き換える
 sudo cp bath-monitor.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now bath-monitor
@@ -50,6 +50,22 @@ journalctl -u bath-monitor -f
 
 これで、自宅LAN上のどの端末からでも`http://<pi-hostname-or-ip>:8080/`でダッシュボードにアクセスできるようになります — ファームウェア側の`SERVER_BASE_URL`(`firmware/src/secrets.rs`)にそのアドレスを設定してください。
 
+### ダッシュボードの表示名
+
+ダッシュボードに出す5人の名前は、ユニットファイルの`[Service]`にある`Environment=BATH_MONITOR_NAME_<ID>=<表示名>`の行で設定します(`<ID>`は`server/config.py`の`PEOPLE`のIDを大文字にしたもの。例: `Environment=BATH_MONITOR_NAME_GRANDPA=おじいちゃん`)。行が無い人や値が空の人は、ID(`grandpa`など)のまま表示されます。名前はダッシュボードの表示にだけ使い、ファームウェアとのやり取りや`/api/*`の応答には影響しません。
+
+表示名を変えたら、ユニットファイルをコピーし直して再起動します(名前はサーバーの起動時に読むため):
+
+```bash
+cd ~/xxx/bath-monitor/server/deploy
+nano bath-monitor.service
+sudo cp bath-monitor.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl restart bath-monitor
+```
+
+`python app.py`/`python wsgi.py`を直接起動したときは、環境変数を設定しない限りIDのまま表示されます(例: `BATH_MONITOR_NAME_GRANDPA=おじいちゃん python wsgi.py`)。
+
 ## コード変更後の更新方法
 
 ```bash
@@ -57,6 +73,8 @@ cd ~/xxx/bath-monitor && git pull
 cd server && .venv/bin/pip install -r requirements.txt   # requirements.txtが変更された場合のみ
 sudo systemctl restart bath-monitor
 ```
+
+`bath-monitor.service.example`が更新された場合(表示名の`Environment=`の行の追加など)、自分の`bath-monitor.service`には自動では反映されません。差分を見て必要な行を書き足し、上の「ダッシュボードの表示名」と同じ手順でコピーし直してください。
 
 ## 補足事項
 
