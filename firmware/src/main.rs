@@ -36,34 +36,26 @@ async fn logger_task(driver: Driver<'static, USB>) {
     entry = "cortex_m_rt::entry"
 )]
 async fn main(spawner: Spawner) {
-    let p = embassy_rp::init(Default::default());
+    let p: embassy_rp::Peripherals = embassy_rp::init(Default::default());
 
     spawner.spawn(logger_task(Driver::new(p.USB, Irqs)).unwrap());
-    // Give the USB serial host a moment to enumerate before the first logs.
+    // Wait for the USB serial host to connect.
     Timer::after(Duration::from_secs(1)).await;
     log::info!("bath-monitor firmware starting");
 
-    // Everything that touches the hardware is started first and doesn't
-    // depend on Wi-Fi at all (see docs/additional_spec.md, "Wi-Fi接続状態に
-    // 依存しない動作"): buttons, NeoPixels, audio and the occupancy sensor
-    // work from here on whether or not Wi-Fi ever connects, and even if
-    // bringing up the Wi-Fi chip below hangs.
+    // Start the local hardware first so it works without Wi-Fi.
     spawner.spawn(led::led_task(p.PIO1, p.DMA_CH2, p.PIN_15).unwrap());
     audio::start(p.CORE1, p.PIO2, p.DMA_CH3, p.PIN_16, p.PIN_17, p.PIN_18);
     spawner.spawn(occupancy::occupancy_task(p.PIN_26.into()).unwrap());
 
-    // Hardcoded pin-to-person mapping — must stay in sync with
-    // config::BUTTON_PINS/PEOPLE and docs/wiring.md (PIO/GPIO field access
-    // can't be driven dynamically from the config array at runtime).
+    // One button task per person.
     spawner.spawn(buttons::button_task(p.PIN_2.into(), 0).unwrap());
     spawner.spawn(buttons::button_task(p.PIN_3.into(), 1).unwrap());
     spawner.spawn(buttons::button_task(p.PIN_4.into(), 2).unwrap());
     spawner.spawn(buttons::button_task(p.PIN_5.into(), 3).unwrap());
     spawner.spawn(buttons::button_task(p.PIN_6.into(), 4).unwrap());
 
-    // Wi-Fi: bring up the chip and network stack, then let `wifi_task` join
-    // (and re-join) in the background; the two network tasks below just wait
-    // for `wifi::is_connected()`.
+    // Bring up Wi-Fi and start the network tasks.
     let (stack, control) = net::init(
         spawner, p.PIN_23, p.PIN_25, p.PIO0, p.PIN_24, p.PIN_29, p.DMA_CH0,
     )
